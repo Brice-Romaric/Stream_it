@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "662781096874",
+    "project_id": "streamit-a6570",
+    "storage_bucket": "streamit-a6570.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:662781096874:android:1eeb8d73a0820a81a4f1d3",
+        "android_client_info": {
+          "package_name": "com.stream_it"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEeRJl1eXFZ-8i3jS9yESFSwIo3fpMnVI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
