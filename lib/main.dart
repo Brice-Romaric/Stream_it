@@ -1,7 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:stream_it/Connexion.dart';
-import 'package:stream_it/Inscription.dart';
+import 'package:stream_it/screens/account/login.dart';
+import 'package:stream_it/screens/account/signup.dart';
 
 import 'firebase_options.dart';
 
@@ -61,8 +61,8 @@ class _MonScaffoldState extends State<MonScaffold> {
           ][_number],
       ),
       body: [
-        Connexion(),
-        Inscription(),
+        Login(),
+        Signup(),
       ][_number] ,
 
       bottomNavigationBar: BottomNavigationBar(

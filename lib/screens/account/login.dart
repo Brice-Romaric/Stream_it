@@ -1,28 +1,29 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:stream_it/Pages/Page_Super_Admin/SuperAdminPageHome.dart';
-import 'package:stream_it/Pages/Page_User/UserPageHome.dart';
+import 'package:stream_it/screens/super_admin/home.dart';
+import 'package:stream_it/screens/user/home.dart';
 
 
-class Connexion extends StatefulWidget {
-  const Connexion({super.key});
+class Login extends StatefulWidget {
+  const Login({super.key});
 
   @override
-  State<Connexion> createState() => _ConnexionState();
+  State<Login> createState() => _LoginState();
 }
 
-class _ConnexionState extends State<Connexion> {
+class _LoginState extends State<Login> {
 
-  final _formkey=GlobalKey<FormState>();
+  final _formKey=GlobalKey<FormState>();
 
-  final mailController=TextEditingController();
-  final mdpController=TextEditingController();
+  final emailController=TextEditingController();
+  final passwordController=TextEditingController();
 
+  @override
   void dispose() {
     super.dispose();
-    mailController.dispose();
-    mdpController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
   }
 
   @override
@@ -30,7 +31,7 @@ class _ConnexionState extends State<Connexion> {
     return Container(
         margin: EdgeInsets.only(top: 50, right:20,bottom:20,left: 20),
         child: Form(
-          key:_formkey,
+          key:_formKey,
             child: Column(
             children:[
             TextFormField(
@@ -41,11 +42,12 @@ class _ConnexionState extends State<Connexion> {
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return "Veuillez saisir l'un des champs (Mail ou Numero)";
+                  return "Veuillez saisir le mail";
                 }
+                return null;
 
               },
-              controller: mailController,
+              controller: emailController,
             ),
 
             const SizedBox(height:30),
@@ -65,7 +67,7 @@ class _ConnexionState extends State<Connexion> {
                 }
                 return null;
               },
-              controller: mdpController,
+              controller: passwordController,
               obscureText: true,
             ),
 
@@ -76,14 +78,14 @@ class _ConnexionState extends State<Connexion> {
               height:50,
               child:ElevatedButton(
                 style:const ButtonStyle(
-                  backgroundColor:MaterialStatePropertyAll(Colors.purpleAccent),
+                  backgroundColor:WidgetStatePropertyAll(Colors.purpleAccent),
                ) ,
                 onPressed: () async
                 {
 
-                  if (_formkey.currentState!.validate()){
-                    final mail=mailController.text;
-                    final mdp=mdpController.text;
+                  if (_formKey.currentState!.validate()){
+                    final mail=emailController.text;
+                    final mdp=passwordController.text;
                     try{
                       final  userCredential= await FirebaseAuth.instance.signInWithEmailAndPassword(email:mail,password:mdp);
                       if (userCredential.user != null){
