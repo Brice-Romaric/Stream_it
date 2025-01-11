@@ -9,11 +9,7 @@ class Favorite extends Model {
   }
 
   static get modelFields {
-    return [
-      "id",
-      "movie_id",
-      "profile_id"
-    ];
+    return ["id", "movie_id", "profile_id"];
   }
 
   String _profileId;
@@ -23,14 +19,14 @@ class Favorite extends Model {
     super.id,
     required String profileId,
     required String movieId,
-  }) : _movieId = movieId, _profileId = profileId;
+  })  : _movieId = movieId,
+        _profileId = profileId;
 
   String get movieId => _movieId;
 
   set movieId(String value) {
-    var temp = _movieId;
-    _movieId = value;
-    if (temp != value) {
+    if (_movieId != value) {
+      _movieId = value;
       notifyListeners();
     }
   }
@@ -38,9 +34,8 @@ class Favorite extends Model {
   String get profileId => _profileId;
 
   set profileId(String value) {
-    var temp = _profileId;
-    _profileId = value;
-    if (temp != value) {
+    if (_profileId != value) {
+      _profileId = value;
       notifyListeners();
     }
   }
@@ -53,10 +48,12 @@ class Favorite extends Model {
   }) =>
       Favorite(
         id: id ?? this.id,
-        profileId: profileId ?? this._profileId,
-        movieId: movieId ?? this._movieId,
+        profileId: profileId ?? _profileId,
+        movieId: movieId ?? _movieId,
       );
 
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un objet ("quelconque")
   factory Favorite.fromData(dynamic data) {
     Map<String, dynamic> d = {};
     for (var field in modelFields) {
@@ -65,25 +62,29 @@ class Favorite extends Model {
     return Favorite.fromJson(data);
   }
 
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un document de type DocumentSnapshot de firebase
   factory Favorite.fromFirebaseDocument(DocumentSnapshot document) {
     return Favorite.fromData(document.data()!);
   }
 
-  factory Favorite.fromRawJson(String str) => Favorite.fromJson(json.decode(str));
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un document JSON au format texte
+  factory Favorite.fromRawJson(String str) =>
+      Favorite.fromJson(json.decode(str));
 
-  @override
-  String toRawJson() => json.encode(toJson());
-
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un objet JSON (Map\<String, dynamic\>)
   factory Favorite.fromJson(Map<String, dynamic> json) => Favorite(
-    id: json["id"],
-    profileId: json["profile_id"],
-    movieId: json["movie_id"],
-  );
+        id: json["id"],
+        profileId: json["profile_id"],
+        movieId: json["movie_id"],
+      );
 
   @override
   Map<String, dynamic> toJson() => {
-    "id": id,
-    "profile_id": _profileId,
-    "movie_id": _movieId,
-  };
+        "id": id,
+        "profile_id": _profileId,
+        "movie_id": _movieId,
+      };
 }

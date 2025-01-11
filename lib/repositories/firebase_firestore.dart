@@ -3,6 +3,8 @@ import 'package:stream_it/repositories/repository.dart';
 
 import '../models/model.dart';
 
+/// Specialisation de la classe abstraite 'Repository' pour qu'elle fonctionne
+/// avec firebase firestore
 class FirebaseFirestoreRepository<T extends Model> implements Repository<T> {
   late final String collectionName;
   late final T Function(Map<String, dynamic> data, String id) fromFirestore;
@@ -11,15 +13,16 @@ class FirebaseFirestoreRepository<T extends Model> implements Repository<T> {
   Future<T> create(T item) async {
     final docRef = await FirebaseFirestore.instance
         .collection(collectionName)
-        .add(collectionName == "user" ? item.toJson() : item.toFirebaseDocument());
+        .add(collectionName == "user" ? item.toJson() : item.toFirebaseFirestoreDocument());
     return fromFirestore(item.toJson(), docRef.id);
   }
 
   @override
-  Future<T?> getById(String id) async {
+  Future<T?> getById(dynamic item) async {
+    String itemId = item is String ? item : item['id'];
     final doc = await FirebaseFirestore.instance
         .collection(collectionName)
-        .doc(id)
+        .doc(itemId)
         .get();
 
     if (doc.exists) {
@@ -55,8 +58,9 @@ class FirebaseFirestoreRepository<T extends Model> implements Repository<T> {
   }
 
   @override
-  Future<bool> delete(String id) async {
-    await FirebaseFirestore.instance.collection(collectionName).doc(id).delete();
+  Future<bool> delete(dynamic item) async {
+    String itemId = item is String ? item : item['id'];
+    await FirebaseFirestore.instance.collection(collectionName).doc(itemId).delete();
     return true;
   }
 

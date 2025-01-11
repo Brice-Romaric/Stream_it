@@ -9,13 +9,7 @@ class User extends Model {
   }
 
   static get modelFields {
-    return [
-      "id",
-      "first_name",
-      "last_name",
-      "email",
-      "role"
-    ];
+    return ["id", "first_name", "last_name", "email", "role"];
   }
 
   String _firstName;
@@ -29,14 +23,16 @@ class User extends Model {
     required String lastName,
     required String email,
     required String role,
-  }) : _firstName = firstName, _lastName = lastName, _email = email, _role = role;
+  })  : _firstName = firstName,
+        _lastName = lastName,
+        _email = email,
+        _role = role;
 
   String get firstName => _firstName;
 
   set firstName(String value) {
-    var temp = _firstName;
-    _firstName = value;
-    if (temp != value) {
+    if (_firstName != value) {
+      _firstName = value;
       notifyListeners();
     }
   }
@@ -44,9 +40,8 @@ class User extends Model {
   String get lastName => _lastName;
 
   set lastName(String value) {
-    var temp = _lastName;
-    _lastName = value;
-    if (temp != value) {
+    if (_lastName != value) {
+      _lastName = value;
       notifyListeners();
     }
   }
@@ -54,9 +49,8 @@ class User extends Model {
   String get email => _email;
 
   set email(String value) {
-    var temp = _email;
-    _email = value;
-    if (temp != value) {
+    if (_email != value) {
+      _email = value;
       notifyListeners();
     }
   }
@@ -64,11 +58,14 @@ class User extends Model {
   String get role => _role;
 
   set role(String value) {
-    var temp = _role;
-    _role = value;
-    if (temp != value) {
+    if (_role != value) {
+      _role = value;
       notifyListeners();
     }
+  }
+
+  get fullName {
+    return "$firstName $lastName";
   }
 
   @override
@@ -87,6 +84,8 @@ class User extends Model {
         role: role ?? _role,
       );
 
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un objet ("quelconque")
   factory User.fromData(dynamic data) {
     Map<String, dynamic> d = {};
     for (var field in modelFields) {
@@ -95,12 +94,18 @@ class User extends Model {
     return User.fromJson(data);
   }
 
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un document de type DocumentSnapshot de firebase
   factory User.fromFirebaseDocument(DocumentSnapshot document) {
     return User.fromData(document.data()!);
   }
 
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un document JSON au format texte
   factory User.fromRawJson(String str) => User.fromJson(json.decode(str));
 
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un objet JSON (Map\<String, dynamic\>)
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json["id"],
@@ -113,10 +118,10 @@ class User extends Model {
 
   @override
   Map<String, dynamic> toJson() => {
-    "id": id,
-    "first_name": _firstName,
-    "last_name": _lastName,
-    "email": _email,
-    "role": _role,
-  };
+        "id": id,
+        "first_name": _firstName,
+        "last_name": _lastName,
+        "email": _email,
+        "role": _role,
+      };
 }

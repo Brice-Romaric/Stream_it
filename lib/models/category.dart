@@ -9,10 +9,7 @@ class Category extends Model {
   }
 
   static get modelFields {
-    return [
-      "id",
-      "name"
-    ];
+    return ["id", "name"];
   }
 
   String _name;
@@ -25,9 +22,8 @@ class Category extends Model {
   String get name => _name;
 
   set name(String value) {
-    var temp = _name;
-    _name = value;
-    if (temp != value) {
+    if (_name != value) {
+      _name = value;
       notifyListeners();
     }
   }
@@ -39,9 +35,11 @@ class Category extends Model {
   }) =>
       Category(
         id: id ?? this.id,
-        name: name ?? this._name,
+        name: name ?? _name,
       );
 
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un objet ("quelconque")
   factory Category.fromData(dynamic data) {
     Map<String, dynamic> d = {};
     for (var field in modelFields) {
@@ -50,23 +48,27 @@ class Category extends Model {
     return Category.fromJson(data);
   }
 
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un document de type DocumentSnapshot de firebase
   factory Category.fromFirebaseDocument(DocumentSnapshot document) {
     return Category.fromData(document.data()!);
   }
 
-  factory Category.fromRawJson(String str) => Category.fromJson(json.decode(str));
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un document JSON au format texte
+  factory Category.fromRawJson(String str) =>
+      Category.fromJson(json.decode(str));
 
-  @override
-  String toRawJson() => json.encode(toJson());
-
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un objet JSON (Map\<String, dynamic\>)
   factory Category.fromJson(Map<String, dynamic> json) => Category(
-    id: json["id"],
-    name: json["name"],
-  );
+        id: json["id"],
+        name: json["name"],
+      );
 
   @override
   Map<String, dynamic> toJson() => {
-    "id": id,
-    "name": _name,
-  };
+        "id": id,
+        "name": _name,
+      };
 }

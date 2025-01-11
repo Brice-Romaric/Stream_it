@@ -49,9 +49,8 @@ class Movie extends Model {
   String get title => _title;
 
   set title(String value) {
-    var temp = _title;
-    _title = value;
-    if (temp != value) {
+    if (_title != value) {
+      _title = value;
       notifyListeners();
     }
   }
@@ -59,9 +58,8 @@ class Movie extends Model {
   String get description => _description;
 
   set description(String value) {
-    var temp = _description;
-    _description = value;
-    if (temp != value) {
+    if (_description != value) {
+      _description = value;
       notifyListeners();
     }
   }
@@ -69,9 +67,8 @@ class Movie extends Model {
   String get category => _category;
 
   set category(String value) {
-    var temp = _category;
-    _category = value;
-    if (temp != value) {
+    if (_category != value) {
+      _category = value;
       notifyListeners();
     }
   }
@@ -79,9 +76,8 @@ class Movie extends Model {
   int get duration => _duration;
 
   set duration(int value) {
-    var temp = _duration;
-    _duration = value;
-    if (temp != value) {
+    if (_duration != value) {
+      _duration = value;
       notifyListeners();
     }
   }
@@ -89,9 +85,8 @@ class Movie extends Model {
   String get url => _url;
 
   set url(String value) {
-    var temp = _url;
-    _url = value;
-    if (temp != value) {
+    if (_url != value) {
+      _url = value;
       notifyListeners();
     }
   }
@@ -99,9 +94,8 @@ class Movie extends Model {
   String get coverUrl => _coverUrl;
 
   set coverUrl(String value) {
-    var temp = _coverUrl;
-    _coverUrl = value;
-    if (temp != value) {
+    if (_coverUrl != value) {
+      _coverUrl = value;
       notifyListeners();
     }
   }
@@ -109,9 +103,8 @@ class Movie extends Model {
   int get views => _views;
 
   set views(int value) {
-    var temp = _views;
-    _views = value;
-    if (temp != value) {
+    if (_views != value) {
+      _views = value;
       notifyListeners();
     }
   }
@@ -129,15 +122,17 @@ class Movie extends Model {
   }) =>
       Movie(
         id: id ?? this.id,
-        title: title ?? this._title,
-        description: description ?? this._description,
-        category: category ?? this._category,
-        duration: duration ?? this._duration,
-        url: url ?? this._url,
-        coverUrl: coverUrl ?? this._coverUrl,
-        views: views ?? this._views,
+        title: title ?? _title,
+        description: description ?? _description,
+        category: category ?? _category,
+        duration: duration ?? _duration,
+        url: url ?? _url,
+        coverUrl: coverUrl ?? _coverUrl,
+        views: views ?? _views,
       );
 
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un objet ("quelconque")
   factory Movie.fromData(dynamic data) {
     Map<String, dynamic> d = {};
     for (var field in modelFields) {
@@ -146,15 +141,18 @@ class Movie extends Model {
     return Movie.fromJson(data);
   }
 
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un document de type DocumentSnapshot de firebase
   factory Movie.fromFirebaseDocument(DocumentSnapshot document) {
     return Movie.fromData(document.data()!);
   }
 
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un document JSON au format texte
   factory Movie.fromRawJson(String str) => Movie.fromJson(json.decode(str));
 
-  @override
-  String toRawJson() => json.encode(toJson());
-
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un objet JSON (Map\<String, dynamic\>)
   factory Movie.fromJson(Map<String, dynamic> json) => Movie(
         id: json["id"],
         title: json["title"],

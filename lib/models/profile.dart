@@ -26,7 +26,9 @@ class Profile extends Model {
     required String userId,
     required String avatarId,
     required String name,
-  }) : _name = name, _avatarId = avatarId, _userId = userId;
+  })  : _name = name,
+        _avatarId = avatarId,
+        _userId = userId;
 
   @override
   Profile copyWith({
@@ -45,9 +47,8 @@ class Profile extends Model {
   String get userId => _userId;
 
   set userId(String value) {
-    var temp = _userId;
-    _userId = value;
-    if (temp != value) {
+    if (_userId != value) {
+      _userId = value;
       notifyListeners();
     }
   }
@@ -55,9 +56,8 @@ class Profile extends Model {
   String get avatarId => _avatarId;
 
   set avatarId(String value) {
-    var temp = _avatarId;
-    _avatarId = value;
-    if (temp != value) {
+    if (_avatarId != value) {
+      _avatarId = value;
       notifyListeners();
     }
   }
@@ -65,13 +65,14 @@ class Profile extends Model {
   String get name => _name;
 
   set name(String value) {
-    var temp = _name;
-    _name = value;
-    if (temp != value) {
+    if (_name != value) {
+      _name = value;
       notifyListeners();
     }
   }
 
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un objet ("quelconque")
   factory Profile.fromData(dynamic data) {
     Map<String, dynamic> d = {};
     for (var field in modelFields) {
@@ -80,27 +81,30 @@ class Profile extends Model {
     return Profile.fromJson(data);
   }
 
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un document de type DocumentSnapshot de firebase
   factory Profile.fromFirebaseDocument(DocumentSnapshot document) {
     return Profile.fromData(document.data()!);
   }
 
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un document JSON au format texte
   factory Profile.fromRawJson(String str) => Profile.fromJson(json.decode(str));
 
-  @override
-  String toRawJson() => json.encode(toJson());
-
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un objet JSON (Map\<String, dynamic\>)
   factory Profile.fromJson(Map<String, dynamic> json) => Profile(
-    id: json["id"],
-    userId: json["user_id"],
-    avatarId: json["avatar_id"],
-    name: json["name"],
-  );
+        id: json["id"],
+        userId: json["user_id"],
+        avatarId: json["avatar_id"],
+        name: json["name"],
+      );
 
   @override
   Map<String, dynamic> toJson() => {
-    "id": id,
-    "user_id": _userId,
-    "avatar_id": _avatarId,
-    "name": _name,
-  };
+        "id": id,
+        "user_id": _userId,
+        "avatar_id": _avatarId,
+        "name": _name,
+      };
 }

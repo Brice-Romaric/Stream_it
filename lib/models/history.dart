@@ -26,14 +26,15 @@ class History extends Model {
     required String movieId,
     required String profileId,
     required DateTime datetime,
-  }) : _datetime = datetime, _profileId = profileId, _movieId = movieId;
+  })  : _datetime = datetime,
+        _profileId = profileId,
+        _movieId = movieId;
 
   String get movieId => _movieId;
 
   set movieId(String value) {
-    var temp = _movieId;
-    _movieId = value;
-    if (temp != value) {
+    if (_movieId != value) {
+      _movieId = value;
       notifyListeners();
     }
   }
@@ -41,9 +42,8 @@ class History extends Model {
   String get profileId => _profileId;
 
   set profileId(String value) {
-    var temp = _profileId;
-    _profileId = value;
-    if (temp != value) {
+    if (_profileId != value) {
+      _profileId = value;
       notifyListeners();
     }
   }
@@ -51,9 +51,8 @@ class History extends Model {
   DateTime get datetime => _datetime;
 
   set datetime(DateTime value) {
-    var temp = _datetime;
-    _datetime = value;
-    if (temp != value) {
+    if (_datetime != value) {
+      _datetime = value;
       notifyListeners();
     }
   }
@@ -67,11 +66,13 @@ class History extends Model {
   }) =>
       History(
         id: id ?? this.id,
-        movieId: movieId ?? this._movieId,
-        profileId: profileId ?? this._profileId,
-        datetime: datetime ?? this._datetime,
+        movieId: movieId ?? _movieId,
+        profileId: profileId ?? _profileId,
+        datetime: datetime ?? _datetime,
       );
 
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un objet ("quelconque")
   factory History.fromData(dynamic data) {
     Map<String, dynamic> d = {};
     for (var field in modelFields) {
@@ -80,27 +81,30 @@ class History extends Model {
     return History.fromJson(data);
   }
 
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un document de type DocumentSnapshot de firebase
   factory History.fromFirebaseDocument(DocumentSnapshot document) {
     return History.fromData(document.data()!);
   }
 
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un document JSON au format texte
   factory History.fromRawJson(String str) => History.fromJson(json.decode(str));
 
-  @override
-  String toRawJson() => json.encode(toJson());
-
+  /// Contructeur permettant de creer une instance de ce model a
+  /// partir d'un objet JSON (Map\<String, dynamic\>)
   factory History.fromJson(Map<String, dynamic> json) => History(
-    id: json["id"],
-    movieId: json["movie_id"],
-    profileId: json["profile_id"],
-    datetime: DateTime.parse(json["datetime"]),
-  );
+        id: json["id"],
+        movieId: json["movie_id"],
+        profileId: json["profile_id"],
+        datetime: DateTime.parse(json["datetime"]),
+      );
 
   @override
   Map<String, dynamic> toJson() => {
-    "id": id,
-    "movie_id": _movieId,
-    "profile_id": _profileId,
-    "datetime": _datetime.toIso8601String(),
-  };
+        "id": id,
+        "movie_id": _movieId,
+        "profile_id": _profileId,
+        "datetime": _datetime.toIso8601String(),
+      };
 }
