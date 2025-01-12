@@ -20,7 +20,7 @@ const int searchTypeContains = 0x8;
 abstract class Repository<T extends Model> {
   /// Methode pour l'ajout ou la creation d'un
   /// objet a la base de donnees pour ce model
-  Future<T> create(T item);
+  Future<T> create(dynamic item);
 
   /// Methode pour la lecture d'un objet de la base de
   /// donnees par [(ID ou objet)] pour ce model
@@ -32,7 +32,7 @@ abstract class Repository<T extends Model> {
 
   /// Methode pour la modification d'un objet existant dans
   /// a la base de donnees pour ce model
-  Future<T> update(T item);
+  Future<T> update(dynamic item);
 
   /// Methode pour la suppression d'un objet de la base de
   /// donnees par [(ID ou objet)] pour ce model

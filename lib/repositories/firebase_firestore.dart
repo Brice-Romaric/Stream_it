@@ -10,13 +10,20 @@ class FirebaseFirestoreRepository<T extends Model> implements Repository<T> {
   late final T Function(Map<String, dynamic> data, String id) fromFirestore;
 
   @override
-  Future<T> create(T item) async {
-    final docRef = await FirebaseFirestore.instance
-        .collection(collectionName)
-        .add(collectionName == "user"
-            ? item.toJson()
-            : item.toFirebaseFirestoreDocument());
-    return fromFirestore(item.toJson(), docRef.id);
+  Future<T> create(dynamic item) async {
+    if (item is T) {
+      final docRef = await FirebaseFirestore.instance
+          .collection(collectionName)
+          .add(collectionName == "user"
+              ? item.toJson()
+              : item.toFirebaseFirestoreDocument());
+      return fromFirestore(item.toJson(), docRef.id);
+    } else {
+      collectionName == "user" ? null : item.remove("id");
+      final docRef =
+          await FirebaseFirestore.instance.collection(collectionName).add(item);
+      return fromFirestore(item, docRef.id);
+    }
   }
 
   @override
@@ -51,15 +58,25 @@ class FirebaseFirestoreRepository<T extends Model> implements Repository<T> {
   }
 
   @override
-  Future<T> update(T item) async {
-    if (item.id == null) {
+  Future<T> update(dynamic item) async {
+    if (item["id"] == null) {
       throw Exception("L'objet doit avoir in ID pour une modification.");
     }
-    await FirebaseFirestore.instance
-        .collection(collectionName)
-        .doc(item.id)
-        .update(item.toJson());
-    return item;
+    if (item is T) {
+      await FirebaseFirestore.instance
+          .collection(collectionName)
+          .doc(item.id)
+          .update(item.toJson());
+      return item;
+    } else {
+      String id = item["id"];
+      item.remove("id");
+      await FirebaseFirestore.instance
+          .collection(collectionName)
+          .doc(id)
+          .update(item);
+      return fromFirestore(item, id);
+    }
   }
 
   @override
@@ -73,8 +90,7 @@ class FirebaseFirestoreRepository<T extends Model> implements Repository<T> {
   }
 
   @override
-  Future<List<T>> search(
-    Map<String, dynamic> filters, {
+  Future<List<T>> search(Map<String, dynamic> filters, {
     Map<String, int>? searchTypes, // Types de recherche par champ
     int defaultType = searchTypeExact,
     int? limit,
@@ -134,11 +150,11 @@ class FirebaseFirestoreRepository<T extends Model> implements Repository<T> {
           final data = doc.data() as Map<String, dynamic>;
 
           // Filtrer les résultats côté client
-          for (var field in filters.keys) {
-            if (filters[field] is String && data[field] is String) {
-              String filterValue = filters[field];
-              String documentValue = data[field];
-              int type = searchTypes?[field] ?? searchTypeExact;
+      for (var field in filters.keys) {
+        if (filters[field] is String && data[field] is String) {
+          String filterValue = filters[field];
+          String documentValue = data[field];
+          int type = searchTypes?[field] ?? searchTypeExact;
 
               // Ignore case
               if (type & searchTypeIgnoreCase != 0) {
@@ -147,13 +163,13 @@ class FirebaseFirestoreRepository<T extends Model> implements Repository<T> {
               }
 
               // Contains
-              if (type & searchTypeContains != 0 &&
-                  !documentValue.contains(filterValue)) {
-                return null;
-              }
+          if (type & searchTypeContains != 0 &&
+              !documentValue.contains(filterValue)) {
+            return null;
+          }
 
               // EndsWith
-          if (type & searchTypeEndsWith != 0 &&
+              if (type & searchTypeEndsWith != 0 &&
               !documentValue.endsWith(filterValue)) {
             return null;
           }
