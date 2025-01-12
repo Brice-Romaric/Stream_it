@@ -52,10 +52,6 @@ abstract class Model extends Iterable<MapEntry<String, dynamic>> with ChangeNoti
   });
 
   /// Contructeur permettant de creer une instance de ce model a
-  /// partir d'un objet ("quelconque")
-  factory Model.fromData(dynamic data) => throw UnimplementedError();
-
-  /// Contructeur permettant de creer une instance de ce model a
   /// partir d'un document de type DocumentSnapshot de firebase
   factory Model.fromFirebaseDocument(DocumentSnapshot document) =>
       throw UnimplementedError();

@@ -39,19 +39,9 @@ class Avatar extends Model {
       );
 
   /// Contructeur permettant de creer une instance de ce model a
-  /// partir d'un objet ("quelconque")
-  factory Avatar.fromData(dynamic data) {
-    Map<String, dynamic> d = {};
-    for (var field in modelFields) {
-      d[field] = data[field];
-    }
-    return Avatar.fromJson(data);
-  }
-
-  /// Contructeur permettant de creer une instance de ce model a
   /// partir d'un document de type DocumentSnapshot de firebase
   factory Avatar.fromFirebaseDocument(DocumentSnapshot document) {
-    return Avatar.fromData(document.data()!);
+    return Avatar.fromJson(document.data()! as Map<String, dynamic>);
   }
 
   /// Contructeur permettant de creer une instance de ce model a
