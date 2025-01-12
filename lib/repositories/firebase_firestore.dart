@@ -65,10 +65,14 @@ class FirebaseFirestoreRepository<T extends Model> implements Repository<T> {
   }
 
   @override
-  Future<List<T>> search(Map<String, dynamic> filters, {int? limit, int? offset}) async {
+  Future<List<T>> search(Map<String, dynamic> filters,
+      {int? limit, int? offset, SearchType type = SearchType.exact}) async {
     Query<Map<String, dynamic>> query = FirebaseFirestore.instance.collection(collectionName);
 
     filters.forEach((key, value) {
+      if (value is String && type == SearchType.ignoreCase) {
+        value = "$value\uf8ff";
+      }
       query = query.where(key, isEqualTo: value);
     });
 
