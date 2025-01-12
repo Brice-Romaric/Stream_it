@@ -1,6 +1,19 @@
 import 'package:stream_it/models/model.dart';
 
-enum SearchType { exact, ignoreCase }
+/// Recherche exacte
+const int searchTypeExact = 0x0;
+
+/// Ignorer la casse
+const int searchTypeIgnoreCase = 0x1;
+
+/// Commence par
+const int searchTypeStartsWith = 0x2;
+
+/// Se termine par
+const int searchTypeEndsWith = 0x4;
+
+/// Contient
+const int searchTypeContains = 0x8;
 
 /// Classe de base pour tous les repository,
 /// definissant ainsi les differentes operations de base (CRUD).
@@ -28,5 +41,8 @@ abstract class Repository<T extends Model> {
   /// Methode pour la recherche par filtre des objets de la base de
   /// donnees pour ce model
   Future<List<T>> search(Map<String, dynamic> filters,
-      {int? limit, SearchType type = SearchType.exact});
+      {int? limit,
+      int? offset,
+      Map<String, int>? searchTypes,
+      int defaultType = searchTypeExact});
 }
