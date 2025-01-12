@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:stream_it/repositories/user.dart';
 import 'package:stream_it/screens/super_admin/managements/category.dart';
 import 'package:stream_it/screens/super_admin/managements/movie.dart';
+import 'package:stream_it/screens/super_admin/managements/screens/form.dart';
+import 'package:stream_it/screens/super_admin/managements/screens/management.dart';
 
 import 'managements/avatar.dart';
 import 'managements/user.dart';
@@ -58,7 +61,14 @@ class SuperAdminPageHome extends StatelessWidget {
     ManagementItem(
       title: "Utilisateurs",
       icon: Icons.supervised_user_circle,
-      screen: () => UserManagementHome(),
+  screen: () => ManagementScreen(
+  title: "Utilisateurs",
+  repository: UserRepository(),
+  cardTitleFields: [],
+  cardSubtitleFields: [],
+  onSearchFields: [],
+  maxItems: 50,
+  form: ,
     ),
     ManagementItem(
       title: "Films",

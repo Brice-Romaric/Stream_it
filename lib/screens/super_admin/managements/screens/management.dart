@@ -1,41 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:stream_it/models/model.dart';
 import 'package:stream_it/repositories/repository.dart';
+import 'package:stream_it/screens/super_admin/managements/screens/form.dart';
 
-extension StringExtension on String {
-  String toCapitalCase() {
-    return "${this[0].toUpperCase()}${substring(1).toLowerCase()}";
-  }
-
-  String snakeToCapitalCase() {
-    return split('_')
-        .map((word) => word[0].toUpperCase() + word.substring(1))
-        .join(' ');
-  }
-}
-
-class ManagementHome extends StatefulWidget {
+class ManagementScreen<T extends Model> extends StatefulWidget {
   final String title;
-  final Repository repository;
+  final Repository<T> repository;
   final List<String> cardTitleFields;
   final List<String> cardSubtitleFields;
   final List<String> onSearchFields;
   final int maxItems;
+  final FormScreen<T> form;
 
-  const ManagementHome(
+  const ManagementScreen(
       {super.key,
       required this.title,
       required this.repository,
       required this.cardTitleFields,
       required this.cardSubtitleFields,
       required this.onSearchFields,
-      this.maxItems = 50});
+      required this.maxItems,
+      required this.form});
 
   @override
-  State<ManagementHome> createState() => _ManagementHomeState();
+  State<ManagementScreen> createState() => _ManagementScreenState();
 }
 
-class _ManagementHomeState extends State<ManagementHome> {
+class _ManagementScreenState extends State<ManagementScreen> {
   List<Model> filteredItems = [];
 
   @override
@@ -129,7 +120,10 @@ class _ManagementHomeState extends State<ManagementHome> {
                         children: [
                           IconButton(
                             onPressed: () {
-                              // Handle edit user
+                              Navigator.push(context,
+                                  MaterialPageRoute(builder: (context) {
+                                return widget.form; // <- item
+                              }));
                             },
                             icon: const Icon(Icons.edit, color: Colors.blue),
                           ),
@@ -154,7 +148,9 @@ class _ManagementHomeState extends State<ManagementHome> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Handle add new user
+          Navigator.push(context, MaterialPageRoute(builder: (context) {
+            return widget.form; // <- null
+          }));
         },
         backgroundColor: Colors.purpleAccent,
         child: const Icon(
