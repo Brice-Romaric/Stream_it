@@ -14,12 +14,10 @@ class FirebaseFirestoreRepository<T extends Model> implements Repository<T> {
     if (item is T) {
       final docRef = await FirebaseFirestore.instance
           .collection(collectionName)
-          .add(collectionName == "user"
-              ? item.toJson()
-              : item.toFirebaseFirestoreDocument());
+          .add(item.toFirebaseFirestoreDocument());
       return fromFirestore(item.toJson(), docRef.id);
     } else {
-      collectionName == "user" ? null : item.remove("id");
+      item.remove("id");
       final docRef =
           await FirebaseFirestore.instance.collection(collectionName).add(item);
       return fromFirestore(item, docRef.id);
