@@ -13,7 +13,7 @@ abstract class Repository<T extends Model> {
 
   /// Methode pour la lecture de tous les objets de la base de
   /// donnees pour ce model
-  Future<List<T>> getAll();
+  Future<List<T>> getAll({int? limit});
 
   /// Methode pour la modification d'un objet existant dans
   /// a la base de donnees pour ce model
@@ -25,5 +25,5 @@ abstract class Repository<T extends Model> {
 
   /// Methode pour la recherche par filtre des objets de la base de
   /// donnees pour ce model
-  Future<List<T>> search(Map<String, dynamic> filters);
+  Future<List<T>> search(Map<String, dynamic> filters, {int? limit});
 }
