@@ -18,8 +18,9 @@ abstract class FormScreen<T extends Model> extends StatefulWidget {
   final dynamic item;
   final String title;
   final Repository<T> repository;
+  final Map<String, dynamic> fields = {};
 
-  const FormScreen(
+  FormScreen(
       {super.key, this.item, required this.title, required this.repository});
 
   @override
@@ -30,39 +31,51 @@ abstract class FormScreen<T extends Model> extends StatefulWidget {
 
 class _FormScreenState<T extends Model> extends State<FormScreen<T>> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final Map<String, dynamic> fields = {};
-  bool isLoading = false;
+  bool isLoading = true;
 
   @override
   Widget build(BuildContext context) {
     var lowerTitle = widget.title.toLowerCase();
     var capitalTitle = widget.title.toCapitalCase();
 
-    return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            "${capitalTitle}s",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    return Stack(children: [
+      Scaffold(
+          appBar: AppBar(
+            title: Text(
+              "${capitalTitle}s",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
           ),
-        ),
-        body: Container(
-            padding: EdgeInsets.all(15),
-            child: Column(
-              children: [
-                Text(
-                  "${widget.item != null ? 'Modifier' : 'Ajouter'} ${lowerTitle == 'categorie' ? 'une' : 'un'} $lowerTitle",
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+          body: Container(
+              padding: EdgeInsets.all(15),
+              child: Column(
+                children: [
+                  Text(
+                    "${widget.item != null ? 'Modifier' : 'Ajouter'} ${lowerTitle == 'categorie' ? 'une' : 'un'} $lowerTitle",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                Form(
-                    key: _formKey, child: widget.buildFieldsContainer(context)),
-              ],
-            )));
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Form(
+                      key: _formKey,
+                      child: widget.buildFieldsContainer(context)),
+                  ElevatedButton(
+                    onPressed: () => onSubmit(context),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purpleAccent),
+                    child: Text(widget.item != null ? 'Modifier' : 'Ajouter'),
+                  ),
+                ],
+              ))),
+      if (isLoading)
+        const Center(
+          child: CircularProgressIndicator(),
+        ),
+    ]);
   }
 
   void onSubmit(BuildContext context) async {
@@ -71,9 +84,9 @@ class _FormScreenState<T extends Model> extends State<FormScreen<T>> {
       setState(() => isLoading = true); // Démarrer le chargement
       try {
         if (widget.item == null) {
-          await widget.repository.create(fields);
+          await widget.repository.create(widget.fields);
         } else {
-          await widget.repository.update(widget.item.copyWith(fields));
+          await widget.repository.update(widget.item.copyWith(widget.fields));
         }
         Navigator.pop(context);
       } catch (e) {

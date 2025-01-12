@@ -3,38 +3,31 @@ import 'package:stream_it/models/model.dart';
 import 'package:stream_it/repositories/repository.dart';
 import 'package:stream_it/screens/super_admin/managements/screens/form.dart';
 
-class ManagementScreen<T extends Model> extends StatefulWidget {
-  final String title;
-  final Repository<T> repository;
-  final List<String> cardTitleFields;
-  final List<String> cardSubtitleFields;
-  final List<String> onSearchFields;
-  final int maxItems;
-  final FormScreen<T> form;
+abstract class ManagementScreen<T extends Model> extends StatefulWidget {
+  late final String title;
+  late final Repository<T> repository;
+  late final List<String> cardTitleFields;
+  late final List<String> cardSubtitleFields;
+  late final List<String> onSearchFields;
+  late final int maxItems;
 
-  const ManagementScreen(
-      {super.key,
-      required this.title,
-      required this.repository,
-      required this.cardTitleFields,
-      required this.cardSubtitleFields,
-      required this.onSearchFields,
-      required this.maxItems,
-      required this.form});
+  ManagementScreen({super.key});
 
   @override
   State<ManagementScreen> createState() => _ManagementScreenState();
+
+  FormScreen buildFormScreen(BuildContext context, Repository<T> repository,
+      String title, dynamic item);
 }
 
 class _ManagementScreenState extends State<ManagementScreen> {
   List<Model> filteredItems = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    widget.repository
-        .getAll(limit: widget.maxItems)
-        .then((value) => filteredItems = value);
+    getItems();
   }
 
   void performSearchQuery(String query) {
@@ -44,11 +37,55 @@ class _ManagementScreenState extends State<ManagementScreen> {
     }
     widget.repository
         .search(fields, limit: widget.maxItems)
-        .then((value) => filteredItems = value);
+        .then((value) => setState(() {
+              filteredItems = value;
+            }));
+  }
+
+  void getItems() {
+    widget.repository.getAll(limit: widget.maxItems).then((value) {
+      if (mounted) {
+        setState(() {
+          filteredItems = value;
+          isLoading = false;
+          print("=========================================================");
+        });
+      }
+    }).catchError((error) {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+          print("=========================================================");
+        });
+      }
+      showErrorDialog('Erreur lors de la récupération des données : $error');
+    });
+  }
+
+  void showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Erreur'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
     var lowerTitle = widget.title.toLowerCase();
     var capitalTitle = widget.title.toCapitalCase();
 
@@ -122,14 +159,21 @@ class _ManagementScreenState extends State<ManagementScreen> {
                             onPressed: () {
                               Navigator.push(context,
                                   MaterialPageRoute(builder: (context) {
-                                return widget.form; // <- item
+                                return widget.buildFormScreen(
+                                    context,
+                                    widget.repository,
+                                    widget.title
+                                        .substring(0, widget.title.length - 1),
+                                    item); // <- item
                               }));
                             },
                             icon: const Icon(Icons.edit, color: Colors.blue),
                           ),
                           IconButton(
                             onPressed: () {
-                              // Handle delete user
+                              widget.repository.delete(item).then((data) {
+                                getItems();
+                              });
                             },
                             icon: const Icon(Icons.delete, color: Colors.red),
                           ),
@@ -149,7 +193,11 @@ class _ManagementScreenState extends State<ManagementScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(context, MaterialPageRoute(builder: (context) {
-            return widget.form; // <- null
+            return widget.buildFormScreen(
+                context,
+                widget.repository,
+                widget.title.substring(0, widget.title.length - 1),
+                null); // <- null
           }));
         },
         backgroundColor: Colors.purpleAccent,
