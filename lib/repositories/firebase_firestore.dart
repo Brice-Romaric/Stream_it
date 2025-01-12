@@ -13,7 +13,9 @@ class FirebaseFirestoreRepository<T extends Model> implements Repository<T> {
   Future<T> create(T item) async {
     final docRef = await FirebaseFirestore.instance
         .collection(collectionName)
-        .add(collectionName == "user" ? item.toJson() : item.toFirebaseFirestoreDocument());
+        .add(collectionName == "user"
+            ? item.toJson()
+            : item.toFirebaseFirestoreDocument());
     return fromFirestore(item.toJson(), docRef.id);
   }
 
@@ -34,9 +36,12 @@ class FirebaseFirestoreRepository<T extends Model> implements Repository<T> {
 
   @override
   Future<List<T>> getAll({int? limit, int? offset}) async {
-    var query = FirebaseFirestore.instance.collection(collectionName).limit(limit ?? 20);
+    var query = FirebaseFirestore.instance
+        .collection(collectionName)
+        .limit(limit ?? 20);
     if (offset != null) {
-      // Firebase doesn't support offsets directly, handle this with a different approach if needed.
+      throw UnimplementedError(
+          "Pagination avec offset n'est pas directement supportée par Firestore.");
     }
 
     final querySnapshot = await query.get();
@@ -48,7 +53,7 @@ class FirebaseFirestoreRepository<T extends Model> implements Repository<T> {
   @override
   Future<T> update(T item) async {
     if (item.id == null) {
-      throw Exception("Item must have an ID for update.");
+      throw Exception("L'objet doit avoir in ID pour une modification.");
     }
     await FirebaseFirestore.instance
         .collection(collectionName)
@@ -60,23 +65,107 @@ class FirebaseFirestoreRepository<T extends Model> implements Repository<T> {
   @override
   Future<bool> delete(dynamic item) async {
     String itemId = item is String ? item : item['id'];
-    await FirebaseFirestore.instance.collection(collectionName).doc(itemId).delete();
+    await FirebaseFirestore.instance
+        .collection(collectionName)
+        .doc(itemId)
+        .delete();
     return true;
   }
 
   @override
-  Future<List<T>> search(Map<String, dynamic> filters, {int? limit, int? offset}) async {
-    Query<Map<String, dynamic>> query = FirebaseFirestore.instance.collection(collectionName);
+  Future<List<T>> search(
+    Map<String, dynamic> filters, {
+    Map<String, int>? searchTypes, // Types de recherche par champ
+    int defaultType = searchTypeExact,
+    int? limit,
+    int? offset,
+  }) async {
+    CollectionReference collection =
+        FirebaseFirestore.instance.collection(collectionName);
 
-    filters.forEach((key, value) {
-      query = query.where(key, isEqualTo: value);
+    Query query = collection;
+
+    // Parcourir les filtres pour construire la requête Firestore
+    filters.forEach((field, value) {
+      int type = searchTypes?[field] ??
+          defaultType; // Type de recherche par défaut : Exact
+
+      if (value is String) {
+        // Recherche exacte
+        if (type & searchTypeExact != 0) {
+          query = query.where(field, isEqualTo: value);
+        }
+
+        // StartsWith (supporté par Firestore)
+        if (type & searchTypeStartsWith != 0) {
+          query = query
+              .where(field, isGreaterThanOrEqualTo: value)
+              .where(field, isLessThan: '$value\uf8ff');
+        }
+
+        // Les autres types nécessitent un filtrage côté client
+        if ((type & searchTypeEndsWith != 0) ||
+            (type & searchTypeContains != 0) ||
+            (type & searchTypeIgnoreCase != 0)) {
+          query = query.where(field,
+              isNotEqualTo: null); // Préparation pour le filtrage côté client
+        }
+      } else {
+        // Pour d'autres types de champs
+        query = query.where(field, isEqualTo: value);
+      }
     });
 
-    if (limit != null) query = query.limit(limit);
+    // Appliquer les limites et l'offset
+    if (limit != null) {
+      query = query.limit(limit);
+    }
+    if (offset != null) {
+      throw UnimplementedError(
+          "Pagination avec offset n'est pas directement supportée par Firestore.");
+    }
 
-    final querySnapshot = await query.get();
-    return querySnapshot.docs
-        .map((doc) => fromFirestore(doc.data(), doc.id))
+    // Exécuter la requête Firestore
+    QuerySnapshot snapshot = await query.get();
+
+    // Appliquer le filtrage côté client pour les types non supportés par Firestore
+    List<T> results = snapshot.docs
+        .map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+
+          // Filtrer les résultats côté client
+          for (var field in filters.keys) {
+            if (filters[field] is String && data[field] is String) {
+              String filterValue = filters[field];
+              String documentValue = data[field];
+              int type = searchTypes?[field] ?? searchTypeExact;
+
+              // Ignore case
+              if (type & searchTypeIgnoreCase != 0) {
+                filterValue = filterValue.toLowerCase();
+                documentValue = documentValue.toLowerCase();
+              }
+
+              // Contains
+              if (type & searchTypeContains != 0 &&
+                  !documentValue.contains(filterValue)) {
+                return null;
+              }
+
+              // EndsWith
+          if (type & searchTypeEndsWith != 0 &&
+              !documentValue.endsWith(filterValue)) {
+            return null;
+          }
+        }
+      }
+
+      return fromFirestore(
+          doc.exists ? doc.data() as Map<String, dynamic> : {}, doc.id);
+    })
+        .whereType<T>()
         .toList();
+
+    return results;
   }
 }
