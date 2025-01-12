@@ -123,7 +123,14 @@ class _SignupState extends State<Signup> {
                           CollectionReference userRef =
                               FirebaseFirestore.instance.collection("user");
                           await userRef.doc(userCredential.user!.uid).set({
-                            'id': userCredential.user!.uid,
+                            //'id': userCredential.user!.uid,
+                            'role': 'user',
+                            'email': mail,
+                            'last_name': lastname,
+                            'first_name': firstname,
+                          });
+                          await userRef.doc(userCredential.user!.uid).set({
+                            //'id': userCredential.user!.uid,
                             'role': 'user',
                             'email': mail,
                             'last_name': lastname,

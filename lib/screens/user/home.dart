@@ -6,7 +6,8 @@ import 'package:stream_it/repositories/user.dart';
 
 
 class UserPageHome extends StatefulWidget {
-  const UserPageHome({super.key});
+  final idUser;
+  const UserPageHome({super.key,required this.idUser});
 
   @override
   State<UserPageHome> createState() => _UserPageHomeState();

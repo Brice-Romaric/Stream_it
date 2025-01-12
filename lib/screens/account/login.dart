@@ -110,7 +110,7 @@ class _LoginState extends State<Login> {
                             case 'user':
                               Navigator.push(context,
                                   MaterialPageRoute(builder: (context)
-                                  {return UserPageHome();} )
+                                  {return UserPageHome(idUser:userCredential.user!.uid);} )
                               );
                               break;
 
