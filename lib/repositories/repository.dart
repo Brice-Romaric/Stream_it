@@ -44,7 +44,8 @@ abstract class Repository<T extends Model> {
       {int? limit,
       int? offset,
       Map<String, int>? searchTypes,
-      int defaultType = searchTypeExact});
+      int defaultType = searchTypeExact,
+      bool isAnd = true});
 
   /// Methode pour la lecture de tous les objets d'une relation
   /// plusieur a plusieur pour ce model [(ID ou objet)]

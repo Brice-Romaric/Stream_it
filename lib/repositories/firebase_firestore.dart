@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:stream_it/repositories/repository.dart';
 
 import '../models/model.dart';
+import '../utils/filter.dart';
 
 /// Specialisation de la classe abstraite 'Repository' pour qu'elle fonctionne
 /// avec firebase firestore
@@ -89,34 +90,34 @@ abstract class FirebaseFirestoreRepository<T extends Model>
   }
 
   @override
-  Future<List<T>> search(
-    Map<String, dynamic> filters, {
-    Map<String, int>? searchTypes, // Types de recherche par champ
-    int defaultType = searchTypeExact,
-    int? limit,
-    int? offset,
-  }) async {
+  Future<List<T>> search(Map<String, dynamic> filters,
+      {Map<String, int>? searchTypes, // Types de recherche par champ
+      int defaultType = searchTypeExact,
+      int? limit,
+      int? offset,
+      bool isAnd = true}) async {
     CollectionReference collection =
         FirebaseFirestore.instance.collection(collectionName);
 
     Query query = collection;
+    var operator = isAnd ? Filter.and : Filter.or;
+    List<Filter> f = [];
 
     // Parcourir les filtres pour construire la requête Firestore
     filters.forEach((field, value) {
       int type = searchTypes?[field] ??
           defaultType; // Type de recherche par défaut : Exact
-
+      List<Filter> f1 = [];
       if (value is String) {
         // Recherche exacte
         if (type & searchTypeExact != 0) {
-          query = query.where(field, isEqualTo: value);
+          f1.add(Filter(field, isEqualTo: value));
         }
 
         // StartsWith (supporté par Firestore)
         if (type & searchTypeStartsWith != 0) {
-          query = query
-              .where(field, isGreaterThanOrEqualTo: value)
-              .where(field, isLessThan: '$value\uf8ff');
+          f1.add(Filter.and(Filter(field, isGreaterThanOrEqualTo: value),
+              Filter(field, isLessThan: '$value\uf8ff')));
         }
 
         // Les autres types nécessitent un filtrage côté client
@@ -125,9 +126,17 @@ abstract class FirebaseFirestoreRepository<T extends Model>
             (type & searchTypeIgnoreCase != 0)) {
           // Préparation pour le filtrage côté client
         }
+        switch (f1.length) {
+          case 1:
+            f.add(f1[0]);
+            break;
+          case 2:
+            f.add(Filter.or(f1[0], f1[1]));
+            break;
+        }
       } else {
         // Pour d'autres types de champs
-        query = query.where(field, isEqualTo: value);
+        f.add(Filter(field, isEqualTo: value));
       }
     });
 
@@ -139,6 +148,8 @@ abstract class FirebaseFirestoreRepository<T extends Model>
       throw UnimplementedError(
           "Pagination avec offset n'est pas directement supportée par Firestore.");
     }
+
+    query.where(fromListFilter(f, operator));
 
     // Exécuter la requête Firestore
     QuerySnapshot snapshot = await query.get();
