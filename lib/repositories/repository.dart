@@ -1,19 +1,19 @@
 import 'package:stream_it/models/model.dart';
 
 /// Recherche exacte
-const int searchTypeExact = 0x0;
+const int searchTypeExact = 0x01;
 
 /// Ignorer la casse
-const int searchTypeIgnoreCase = 0x1;
+const int searchTypeIgnoreCase = 0x02;
 
 /// Commence par
-const int searchTypeStartsWith = 0x2;
+const int searchTypeStartsWith = 0x04;
 
 /// Se termine par
-const int searchTypeEndsWith = 0x4;
+const int searchTypeEndsWith = 0x08;
 
 /// Contient
-const int searchTypeContains = 0x8;
+const int searchTypeContains = 0x10;
 
 /// Classe de base pour tous les repository,
 /// definissant ainsi les differentes operations de base (CRUD).
