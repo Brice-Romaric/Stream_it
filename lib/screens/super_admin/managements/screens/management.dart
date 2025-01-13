@@ -34,9 +34,9 @@ class _ManagementScreenState extends State<ManagementScreen> {
     for (var field in widget.onSearchFields) {
       fields[field] = query;
     }
-    setState(() {
-      filteredItems = widget.repository.search(fields, limit: widget.maxItems);
-    });
+    filteredItems =
+        widget.repository.search(fields, limit: widget.maxItems, isAnd: false);
+    setState(() {});
   }
 
   void getItems() {
@@ -85,7 +85,6 @@ class _ManagementScreenState extends State<ManagementScreen> {
               child: FutureBuilder(
                   future: filteredItems,
                   builder: (context, snapshot) {
-                    print("========================================");
                     List<Widget> children;
 
                     if (snapshot.hasData) {
