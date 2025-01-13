@@ -7,8 +7,8 @@ import '../models/model.dart';
 /// avec firebase firestore
 abstract class FirebaseFirestoreRepository<T extends Model>
     implements Repository<T> {
-  final String collectionName = T.toString().toLowerCase();
-  final Map<Type, Function(Map<String, dynamic>, String)> fromFirestoreMap = {};
+  final String collectionName = Model.modelToColletionName<T>();
+  final Map<Type, Function(dynamic, String)> fromFirestoreMap = {};
 
   @override
   Future<T> create(dynamic item) async {
@@ -123,8 +123,7 @@ abstract class FirebaseFirestoreRepository<T extends Model>
         if ((type & searchTypeEndsWith != 0) ||
             (type & searchTypeContains != 0) ||
             (type & searchTypeIgnoreCase != 0)) {
-          query = query.where(field,
-              isNotEqualTo: null); // Préparation pour le filtrage côté client
+          // Préparation pour le filtrage côté client
         }
       } else {
         // Pour d'autres types de champs
@@ -176,8 +175,7 @@ abstract class FirebaseFirestoreRepository<T extends Model>
             }
           }
 
-          return fromFirestoreMap[T]!(
-              doc.exists ? doc.data() as Map<String, dynamic> : {}, doc.id);
+          return fromFirestoreMap[T]!(doc.exists ? doc.data() : {}, doc.id);
         })
         .whereType<T>()
         .toList();
@@ -191,72 +189,72 @@ abstract class FirebaseFirestoreRepository<T extends Model>
   Future<List<M>> getManyMany<M extends Model>(
       item, String relationName) async {
     String itemId = item is String ? item : item['id'];
-    var itemsName = M.toString().toLowerCase();
+    var otherName = Model.modelToColletionName<M>();
     try {
-      CollectionReference itemItemsRef =
+      CollectionReference relationRef =
           FirebaseFirestore.instance.collection(relationName);
 
-      QuerySnapshot itemItemsSnapshot = await itemItemsRef
+      QuerySnapshot relationSnapshot = await relationRef
           .where('${collectionName}_id', isEqualTo: itemId)
           .get();
 
-      List<String> itemsIds = itemItemsSnapshot.docs.map((doc) {
-        return doc['${itemsName}_id'] as String;
+      List<String> othersIds = relationSnapshot.docs.map((doc) {
+        return doc['${otherName}_id'] as String;
       }).toList();
 
-      CollectionReference itemsRef =
-          FirebaseFirestore.instance.collection(itemsName);
+      CollectionReference otherRef =
+          FirebaseFirestore.instance.collection(otherName);
 
-      List<M> items = [];
-      for (String itemsId in itemsIds) {
-        DocumentSnapshot itemsDoc = await itemsRef.doc(itemsId).get();
-        if (itemsDoc.exists) {
-          items.add(fromFirestoreMap[M]!(
-              itemsDoc.data() as Map<String, dynamic>, itemsDoc.id));
+      List<M> others = [];
+      for (String otherId in othersIds) {
+        DocumentSnapshot otherDoc = await otherRef.doc(otherId).get();
+        if (otherDoc.exists) {
+          others.add(fromFirestoreMap[M]!(otherDoc.data(), otherDoc.id));
         }
       }
-      return items;
+      return others;
     } catch (e) {
-      print("Erreur lors de la récupération des '$itemsName' : $e");
+      print("Erreur lors de la récupération des '$otherName' : $e");
       return [];
     }
   }
 
   @override
   Future<void> addManyMany<M extends Model>(item, String relationName,
-      {List? items, bool continueOnError = false}) async {
-    if (items == null || items.isEmpty) {
-      print('Aucune catégorie à ajouter.');
+      {List? others, bool continueOnError = false}) async {
+    if (others == null || others.isEmpty) {
+      print('Aucun objet à ajouter.');
       return;
     }
-    var itemsName = M.toString().toLowerCase();
+    var otherName = Model.modelToColletionName<M>();
 
-    CollectionReference itemItemsRef =
+    CollectionReference relationRef =
         FirebaseFirestore.instance.collection(relationName);
     String itemId = item is String ? item : item['id'];
-    for (var item_ in items) {
+    for (var other in others) {
       try {
-        String itemId_ = item_ is String ? item_ : item_['id'];
+        String otherId = other is String ? other : other['id'];
 
-        QuerySnapshot existingRelation = await itemItemsRef
+        QuerySnapshot existingRelation = await relationRef
             .where('${collectionName}_id', isEqualTo: itemId)
-            .where('${itemsName}_id', isEqualTo: itemId_)
+            .where('${otherName}_id', isEqualTo: otherId)
             .get();
 
         if (existingRelation.docs.isNotEmpty) {
-          print('$itemId_ est déjà associée a $itemId.');
+          print('$otherId est déjà associée a $itemId.');
           continue; // Passer à la catégorie suivante
         }
 
         // Ajouter la relation
-        await itemItemsRef.add({
+        await relationRef.add({
+          ...(other is String ? {} : other),
           '${collectionName}_id': itemId,
-          '${itemsName}_id': itemId_,
+          '${otherName}_id': otherId,
         });
 
-        print('Model $itemId_ ajouté a $itemId.');
+        print('Model $otherId ajouté a $itemId.');
       } catch (e) {
-        print('Erreur lors de l\'ajout de $item_ a $itemId : $e');
+        print('Erreur lors de l\'ajout de $other a $itemId : $e');
         if (!continueOnError) {
           return; // Arrêter si une erreur survient et continueOnError est false
         }
@@ -266,28 +264,28 @@ abstract class FirebaseFirestoreRepository<T extends Model>
 
   @override
   Future<void> removeManyMany<M extends Model>(item, String relationName,
-      {List? items, bool continueOnError = false}) async {
-    if (items == null || items.isEmpty) {
-      print('Aucune catégorie à supprimer.');
+      {List? others, bool continueOnError = false}) async {
+    if (others == null || others.isEmpty) {
+      print('Aucun objet à supprimer.');
       return;
     }
 
-    var itemsName = M.toString().toLowerCase();
-    CollectionReference itemItemsRef =
+    var otherName = Model.modelToColletionName<M>();
+    CollectionReference relationRef =
         FirebaseFirestore.instance.collection(relationName);
     String itemId = item is String ? item : item['id'];
 
-    for (var item_ in items) {
+    for (var other in others) {
       try {
-        String itemId_ = item_ is String ? item_ : item_['id'];
+        String otherId = other is String ? other : other['id'];
 
-        QuerySnapshot existingRelation = await itemItemsRef
+        QuerySnapshot existingRelation = await relationRef
             .where('${collectionName}_id', isEqualTo: itemId)
-            .where('${itemsName}_id', isEqualTo: itemId_)
+            .where('${otherName}_id', isEqualTo: otherId)
             .get();
 
         if (existingRelation.docs.isEmpty) {
-          print('Aucune relation trouvée pour $itemId_ et $itemId.');
+          print('Aucune relation trouvée pour $otherId et $itemId.');
           continue; // Passer à la catégorie suivante
         }
 
@@ -296,9 +294,9 @@ abstract class FirebaseFirestoreRepository<T extends Model>
           await doc.reference.delete();
         }
 
-        print('$itemId_ supprimée de $itemId.');
+        print('$otherId supprimée de $itemId.');
       } catch (e) {
-        print('Erreur lors de la suppression de $item_ dans $itemId : $e');
+        print('Erreur lors de la suppression de $other dans $itemId : $e');
         if (!continueOnError) {
           return; // Arrêter si une erreur survient et continueOnError est false
         }
@@ -307,42 +305,161 @@ abstract class FirebaseFirestoreRepository<T extends Model>
   }
 
   @override
-  Future<List<M>> getMany<M extends Model>(item) {
-    // TODO: implement getMany
-    throw UnimplementedError();
+  Future<List<M>> getMany<M extends Model>(item) async {
+    // Vérifiez si l'item est une chaîne ou un objet avec un ID
+    String itemId = item is String ? item : item['id'];
+    String otherName = Model.modelToColletionName<M>();
+
+    try {
+      // Récupérer la référence vers la collection
+      CollectionReference otherRef =
+          FirebaseFirestore.instance.collection(otherName);
+
+      // Effectuer une requête pour les éléments liés
+      QuerySnapshot querySnapshot =
+          await otherRef.where('${collectionName}_id', isEqualTo: itemId).get();
+
+      // Construire la liste d'objets à partir des documents retournés
+      List<M> others = querySnapshot.docs.map((doc) {
+        return fromFirestoreMap[M]!(doc.data(), doc.id) as M;
+      }).toList();
+
+      return others;
+    } catch (e) {
+      print("Erreur lors de la récupération des éléments : $e");
+      return [];
+    }
   }
 
   @override
   Future<void> addMany<M extends Model>(item,
-      {List? items, bool continueOnError = false}) {
-    // TODO: implement addMany
-    throw UnimplementedError();
+      {List? others, bool continueOnError = false}) async {
+    if (others == null || others.isEmpty) {
+      throw ArgumentError(
+          "La liste des items à ajouter ne peut pas être vide.");
+    }
+
+    // Vérifiez si l'item est une chaîne ou un objet avec un ID
+    String itemId = item is String ? item : item['id'];
+    String otherName = Model.modelToColletionName<M>();
+
+    try {
+      CollectionReference otherRef =
+          FirebaseFirestore.instance.collection(otherName);
+
+      for (var other in others) {
+        try {
+          other["id"] = (await otherRef.add({
+            ...other,
+            '${collectionName}_id': itemId,
+          }))
+              .id;
+        } catch (e) {
+          if (!continueOnError) {
+            rethrow; // Relance l'erreur si `continueOnError` est `false`
+          }
+          print("Erreur lors de l'ajout de l'item : $e");
+        }
+      }
+    } catch (e) {
+      print("Erreur globale lors de l'ajout des items : $e");
+    }
   }
 
   @override
   Future<void> removeMany<M extends Model>(item,
-      {List? items, bool continueOnError = false}) {
-    // TODO: implement removeMany
-    throw UnimplementedError();
+      {List? others, bool continueOnError = false}) async {
+    if (others == null || others.isEmpty) {
+      throw ArgumentError(
+          "La liste des items à supprimer ne peut pas être vide.");
+    }
+
+    String itemId = item is String ? item : item['id'];
+    String otherName = Model.modelToColletionName<M>();
+
+    try {
+      CollectionReference otherRef =
+          FirebaseFirestore.instance.collection(otherName);
+
+      for (var other in others) {
+        try {
+          String otherId = other is String ? other : other['id'];
+          QuerySnapshot querySnapshot = await otherRef
+              .where('${collectionName}_id', isEqualTo: itemId)
+              .get();
+
+          for (QueryDocumentSnapshot doc in querySnapshot.docs) {
+            if (doc.id == otherId) {
+              await otherRef.doc(doc.id).delete();
+            }
+          }
+        } catch (e) {
+          if (!continueOnError) {
+            rethrow;
+          }
+          print("Erreur lors de la suppression de l'item : $e");
+        }
+      }
+    } catch (e) {
+      print("Erreur globale lors de la suppression des items : $e");
+    }
   }
 
   @override
-  Future<M> getOne<M extends Model>(item) {
-    // TODO: implement getOne
-    throw UnimplementedError();
+  Future<M?> getOne<M extends Model>(item) async {
+    String otherName = Model.modelToColletionName<M>();
+    String itemId = item is String ? item : item['id'];
+    try {
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection(collectionName)
+          .doc(itemId)
+          .get();
+      if (doc.exists) {
+        String otherId = doc.get("${otherName}_id");
+        if (otherId == "") {
+          return null;
+        }
+        DocumentSnapshot os = await FirebaseFirestore.instance
+            .collection(otherName)
+            .doc(otherId)
+            .get();
+        return fromFirestoreMap[M]!(os.data(), os.id);
+      } else {
+        throw Exception(
+            "L'item avec l'ID $itemId n'existe pas dans la collection $collectionName.");
+      }
+    } catch (e) {
+      print("Erreur lors de la récupération de l'item (... a un) : $e");
+      rethrow;
+    }
   }
 
   @override
-  Future<void> addOne<M extends Model>(item,
-      {List? items, bool continueOnError = false}) {
-    // TODO: implement addOne
-    throw UnimplementedError();
+  Future<void> setOne<M extends Model>(item, other) async {
+    String otherName = Model.modelToColletionName<M>();
+    String itemId = item is String ? item : item['id'];
+    String otherId = other is String ? other : other['id'];
+    try {
+      await FirebaseFirestore.instance
+          .collection(collectionName)
+          .doc(itemId)
+          .update({"${otherName}_id": otherId});
+    } catch (e) {
+      print("Erreur lors de l'ajout (... a un) : $e");
+    }
   }
 
   @override
-  Future<void> removeOne<M extends Model>(item,
-      {List? items, bool continueOnError = false}) {
-    // TODO: implement removeOne
-    throw UnimplementedError();
+  Future<void> removeOne<M extends Model>(item) async {
+    String otherName = Model.modelToColletionName<M>();
+    String itemId = item is String ? item : item['id'];
+    try {
+      await FirebaseFirestore.instance
+          .collection(collectionName)
+          .doc(itemId)
+          .update({"${otherName}_id": null});
+    } catch (e) {
+      print("Erreur lors de la suppression (... a un) : $e");
+    }
   }
 }

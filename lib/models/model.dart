@@ -85,4 +85,14 @@ abstract class Model extends Iterable<MapEntry<String, dynamic>> with ChangeNoti
   String toString() {
     return toRawJson();
   }
+
+  static String modelToColletionName<T extends Model>([Type? type]) {
+    return (type ?? T)
+        .toString()
+        .replaceAllMapped(
+          RegExp(r'(?<!^)([A-Z])'),
+          (Match match) => '_${match.group(1)!}',
+        )
+        .toLowerCase();
+  }
 }
