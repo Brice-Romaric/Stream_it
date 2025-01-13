@@ -20,7 +20,7 @@ class ManagementItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       child: Card(
-        color: Colors.purple,
+        color: Colors.purpleAccent,
         elevation: 10,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -83,7 +83,7 @@ class SuperAdminPageHome extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text("Tableau de bord"),
-        backgroundColor: Colors.purple,
+        backgroundColor: Colors.purpleAccent,
       ),
       body: GridView.builder(
           padding: EdgeInsets.all(15),

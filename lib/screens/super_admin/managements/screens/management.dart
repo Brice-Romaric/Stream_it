@@ -21,8 +21,7 @@ abstract class ManagementScreen<T extends Model> extends StatefulWidget {
 }
 
 class _ManagementScreenState extends State<ManagementScreen> {
-  List<Model> filteredItems = [];
-  bool isLoading = true;
+  Future<List<Model>>? filteredItems;
 
   @override
   void initState() {
@@ -35,57 +34,17 @@ class _ManagementScreenState extends State<ManagementScreen> {
     for (var field in widget.onSearchFields) {
       fields[field] = query;
     }
-    widget.repository
-        .search(fields, limit: widget.maxItems)
-        .then((value) => setState(() {
-              filteredItems = value;
-            }));
-  }
-
-  void getItems() {
-    widget.repository.getAll(limit: widget.maxItems).then((value) {
-      if (mounted) {
-        setState(() {
-          filteredItems = value;
-          isLoading = false;
-          print("=========================================================");
-        });
-      }
-    }).catchError((error) {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-          print("=========================================================");
-        });
-      }
-      showErrorDialog('Erreur lors de la récupération des données : $error');
+    setState(() {
+      filteredItems = widget.repository.search(fields, limit: widget.maxItems);
     });
   }
 
-  void showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Erreur'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
+  void getItems() {
+    filteredItems = widget.repository.getAll(limit: widget.maxItems);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
-
     var lowerTitle = widget.title.toLowerCase();
     var capitalTitle = widget.title.toCapitalCase();
 
@@ -123,69 +82,107 @@ class _ManagementScreenState extends State<ManagementScreen> {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: ListView.separated(
-                itemCount:
-                    filteredItems.length, // Replace with the number of users
-                itemBuilder: (context, index) {
-                  var item = filteredItems[index];
-                  var title = "";
-                  for (var field in widget.cardTitleFields) {
-                    title = "$title${item[field] ?? ''}";
-                  }
-                  return Card(
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.purpleAccent,
-                        child: const Icon(
-                          Icons.person,
-                          color: Colors.white,
+              child: FutureBuilder(
+                  future: filteredItems,
+                  builder: (context, snapshot) {
+                    print("========================================");
+                    List<Widget> children;
+
+                    if (snapshot.hasData) {
+                      return ListView.separated(
+                        itemCount: snapshot
+                            .data!.length, // Replace with the number of users
+                        itemBuilder: (context, index) {
+                          var item = snapshot.data![index];
+                          var title = "";
+                          for (var field in widget.cardTitleFields) {
+                            title = "$title${item[field] ?? ''}";
+                          }
+                          return Card(
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.purpleAccent,
+                                child: const Icon(
+                                  Icons.person,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              title: Text(title),
+                              subtitle: Column(
+                                children: widget.cardSubtitleFields
+                                    .map((field) => Text("${item[field]}"))
+                                    .toList(),
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    onPressed: () {
+                                      Navigator.push(context,
+                                          MaterialPageRoute(builder: (context) {
+                                        return widget.buildFormScreen(
+                                            context,
+                                            widget.repository,
+                                            widget.title.substring(
+                                                0, widget.title.length - 1),
+                                            item); // <- item
+                                      }));
+                                    },
+                                    icon: const Icon(Icons.edit,
+                                        color: Colors.blue),
+                                  ),
+                                  IconButton(
+                                    onPressed: () {
+                                      widget.repository
+                                          .delete(item)
+                                          .then((data) {
+                                        getItems();
+                                      });
+                                    },
+                                    icon: const Icon(Icons.delete,
+                                        color: Colors.red),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                        separatorBuilder: (context, index) => SizedBox(
+                          height: 16,
                         ),
+                      );
+                    } else if (snapshot.hasError) {
+                      children = <Widget>[
+                        const Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                          size: 60,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: Text('Error: ${snapshot.error}'),
+                        ),
+                      ];
+                    } else {
+                      children = const <Widget>[
+                        SizedBox(
+                          width: 60,
+                          height: 60,
+                          child: CircularProgressIndicator(),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(top: 16),
+                          child: Text('En attente de resultat...'),
+                        ),
+                      ];
+                    }
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: children,
                       ),
-                      title: Text(title),
-                      subtitle: Column(
-                        children: widget.cardSubtitleFields
-                            .map((field) => Row(
-                                  children: [
-                                    Text("${field.snakeToCapitalCase()} : "),
-                                    Text("${item[field]}")
-                                  ],
-                                ))
-                            .toList(),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            onPressed: () {
-                              Navigator.push(context,
-                                  MaterialPageRoute(builder: (context) {
-                                return widget.buildFormScreen(
-                                    context,
-                                    widget.repository,
-                                    widget.title
-                                        .substring(0, widget.title.length - 1),
-                                    item); // <- item
-                              }));
-                            },
-                            icon: const Icon(Icons.edit, color: Colors.blue),
-                          ),
-                          IconButton(
-                            onPressed: () {
-                              widget.repository.delete(item).then((data) {
-                                getItems();
-                              });
-                            },
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-                separatorBuilder: (context, index) => SizedBox(
-                  height: 16,
-                ),
-              ),
+                    );
+                  }),
             ),
           ],
         ),

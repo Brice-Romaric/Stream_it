@@ -42,7 +42,7 @@ class UserManagementScreen extends ManagementScreen<User> {
     cardTitleFields = ["first_name", "last_name"];
     cardSubtitleFields = ["email"];
     onSearchFields = User.modelFields;
-    repository = UserRepository();
+    repository = UserRepository.instance;
     maxItems = 50;
   }
 
