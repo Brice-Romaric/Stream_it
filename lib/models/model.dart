@@ -33,6 +33,8 @@ abstract class Model extends Iterable<MapEntry<String, dynamic>> with ChangeNoti
 
   operator [](String field) => toJson()[field];
 
+  operator []=(String field, dynamic value) => toJson()[field] = value;
+
   /// Champ 'id' present dans toutes les collections
   /// firebase firestore et modifiable uniquement si aucune valeur
   /// n'est presente (null)

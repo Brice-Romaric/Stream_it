@@ -45,4 +45,50 @@ abstract class Repository<T extends Model> {
       int? offset,
       Map<String, int>? searchTypes,
       int defaultType = searchTypeExact});
+
+  /// Methode pour la lecture de tous les objets d'une relation
+  /// plusieur a plusieur pour ce model [(ID ou objet)]
+  Future<List<M>> getManyMany<M extends Model>(
+      dynamic item, String relationName);
+
+  /// Methode pour l'ajout d'objets d'une relation
+  /// plusieur a plusieur pour ce model [(ID ou objet)]
+  Future<void> addManyMany<M extends Model>(dynamic item, String relationName,
+      {List<dynamic>? items, bool continueOnError = false});
+
+  /// Methode pour la suppression d'objets d'une relation
+  /// plusieur a plusieur pour ce model [(ID ou objet)]
+  Future<void> removeManyMany<M extends Model>(
+      dynamic item, String relationName,
+      {List<dynamic>? items, bool continueOnError = false});
+
+  /// Methode pour la lecture de tous les objets d'une relation
+  /// un a plusieur pour ce model [(ID ou objet)]
+  Future<List<M>> getMany<M extends Model>(dynamic item);
+
+  /// Methode pour l'ajout d'objets d'une relation
+  /// un a plusieur pour ce model [(ID ou objet)]
+  Future<void> addMany<M extends Model>(dynamic item,
+      {List<dynamic>? items, bool continueOnError = false});
+
+  /// Methode pour la suppression d'objets d'une relation
+  /// plusieur a plusieur pour ce model [(ID ou objet)]
+  Future<void> removeMany<M extends Model>(dynamic item,
+      {List<dynamic>? items, bool continueOnError = false});
+
+  /// Methode pour la lecture d'un objet d'une relation
+  /// un a un pour ce model [(ID ou objet)]
+  Future<M> getOne<M extends Model>(dynamic item);
+
+  /// Methode pour l'ajout d'un objet d'une relation
+  /// un a un pour ce model [(ID ou objet)]
+  Future<void> addOne<M extends Model>(dynamic item,
+      {List<dynamic>? items, bool continueOnError = false});
+
+  /// Methode pour la suppression d'un objet d'une relation
+  /// un a un pour ce model [(ID ou objet)]
+  Future<void> removeOne<M extends Model>(dynamic item,
+      {List<dynamic>? items, bool continueOnError = false});
+
+  static get instance => throw UnimplementedError();
 }
