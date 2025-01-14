@@ -13,7 +13,6 @@ class Movie extends Model {
       "id",
       "title",
       "description",
-      "category",
       "duration",
       "url",
       "cover_url",
@@ -23,7 +22,6 @@ class Movie extends Model {
 
   String _title;
   String _description;
-  String _category;
   int _duration;
   String _url;
   String _coverUrl;
@@ -33,7 +31,6 @@ class Movie extends Model {
     super.id,
     required String title,
     required String description,
-    required String category,
     required int duration,
     required String url,
     required String coverUrl,
@@ -42,7 +39,6 @@ class Movie extends Model {
         _coverUrl = coverUrl,
         _url = url,
         _duration = duration,
-        _category = category,
         _description = description,
         _title = title;
 
@@ -60,15 +56,6 @@ class Movie extends Model {
   set description(String value) {
     if (_description != value) {
       _description = value;
-      notifyListeners();
-    }
-  }
-
-  String get category => _category;
-
-  set category(String value) {
-    if (_category != value) {
-      _category = value;
       notifyListeners();
     }
   }
@@ -114,7 +101,6 @@ class Movie extends Model {
     String? id,
     String? title,
     String? description,
-    String? category,
     int? duration,
     String? url,
     String? coverUrl,
@@ -124,7 +110,6 @@ class Movie extends Model {
         id: id ?? this.id,
         title: title ?? _title,
         description: description ?? _description,
-        category: category ?? _category,
         duration: duration ?? _duration,
         url: url ?? _url,
         coverUrl: coverUrl ?? _coverUrl,
@@ -157,7 +142,6 @@ class Movie extends Model {
         id: json["id"],
         title: json["title"],
         description: json["description"],
-        category: json["category"],
         duration: json["duration"],
         url: json["url"],
         coverUrl: json["cover_url"],
@@ -169,7 +153,6 @@ class Movie extends Model {
         "id": id,
         "title": _title,
         "description": _description,
-        "category": _category,
         "duration": _duration,
         "url": _url,
         "cover_url": _coverUrl,
