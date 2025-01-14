@@ -5,5 +5,7 @@ class ProfileRepository extends FirebaseFirestoreRepository<Profile> {
   ProfileRepository() {
     collectionName = Profile.modelName;
     fromFirestore = (data, id) => Profile.fromJson({...data, "id": id});
+
   }
+
 }

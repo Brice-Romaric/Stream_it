@@ -1,7 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:stream_it/models/profile.dart';
 import 'package:validators/validators.dart';
+
+import '../../models/avatar.dart';
+import '../../repositories/avatar.dart';
 
 class Signup extends StatefulWidget {
   const Signup({super.key});
@@ -18,17 +22,31 @@ class _SignupState extends State<Signup> {
   final lastnameController = TextEditingController();
   final firstnameController = TextEditingController();
 
+  var A=AvatarRepository();
+    List<Avatar> avatar= []  ;
+
+  Future<void> loadAvatars() async {
+    try {
+      // Récupérer les profils avec la méthode asynchrone
+         avatar = await A.getAll(limit: 1);
+    } catch (e) {
+      print("Erreur lors du chargement des avatars : $e");
+    }
+  }
+
   @override
   void dispose() {
     super.dispose();
     mailController.dispose();
     passwordController.dispose();
+    lastnameController.dispose();
+    firstnameController.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        margin: const EdgeInsets.only(top: 20, right: 20, bottom: 20, left: 20),
+    return   Padding(
+        padding: const EdgeInsets.all(20.0),
         child: Form(
             key: _formKey,
             child: Column(children: [
@@ -49,7 +67,7 @@ class _SignupState extends State<Signup> {
                 },
                 controller: mailController,
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 15),
               TextFormField(
                 decoration: const InputDecoration(
                   labelText: "Mot De Passe",
@@ -68,7 +86,7 @@ class _SignupState extends State<Signup> {
                 controller: passwordController,
                 obscureText: true,
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 15),
               TextFormField(
                 decoration: const InputDecoration(
                   labelText: "Nom de Famille",
@@ -83,7 +101,7 @@ class _SignupState extends State<Signup> {
                 },
                 controller: lastnameController,
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 15),
               TextFormField(
                 decoration: const InputDecoration(
                   labelText: "Prénom",
@@ -98,7 +116,7 @@ class _SignupState extends State<Signup> {
                 },
                 controller: firstnameController,
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 15),
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -107,7 +125,12 @@ class _SignupState extends State<Signup> {
                     backgroundColor:
                         WidgetStatePropertyAll(Colors.purpleAccent),
                   ),
+
                   onPressed: () async {
+                    setState(() {
+                       loadAvatars(); // Mettre à jour l'état
+                    });
+
                     if (_formKey.currentState!.validate()) {
                       final mail = mailController.text;
                       final mdp = passwordController.text;
@@ -129,13 +152,16 @@ class _SignupState extends State<Signup> {
                             'last_name': lastname,
                             'first_name': firstname,
                           });
-                          await userRef.doc(userCredential.user!.uid).set({
-                            //'id': userCredential.user!.uid,
-                            'role': 'user',
-                            'email': mail,
-                            'last_name': lastname,
-                            'first_name': firstname,
+
+                          CollectionReference profileRef =
+                          FirebaseFirestore.instance.collection("profile");
+
+                          await profileRef.add({
+                            'user_id': userCredential.user!.uid,
+                            'avatar_id': avatar[0].id,
+                            'profile_name': firstname,
                           });
+
                           ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text("Inscription réussie")));
                           FocusScope.of(context).requestFocus(FocusNode());

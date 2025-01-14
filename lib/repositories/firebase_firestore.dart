@@ -53,8 +53,7 @@ class FirebaseFirestoreRepository<T extends Model> implements Repository<T> {
 
     final querySnapshot = await query.get();
     return querySnapshot.docs
-        .map((doc) => fromFirestore(doc.data(), doc.id))
-        .toList();
+        .map((doc) => fromFirestore(doc.data(), doc.id)).toList();
   }
 
   @override
