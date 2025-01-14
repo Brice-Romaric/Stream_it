@@ -25,23 +25,33 @@ class _MoviesState extends State<Movies> {
 
   bool isLoading = true;
   var flm=MovieRepository();
-  List<Movie> movies = [];
-
   var ctg=CategoryRepository();
+
+  List<Movie> all_movies = [];
   List<Category> categories = [];
+  Map<Category, List<Movie>> categoryMoviesMap = {};
 
   Future<void> recuperation() async{
     try{
-      movies = await flm.getAll();
-      //categories=await ctg.getAll();
-      setState(() {
+      final fetchedCategories =await ctg.getAll();
+      final fetchedMovies =await flm.getAll();
+      final Map<Category, List<Movie>> fetchedCategoryMoviesMap = {};
 
+      for (var category in fetchedCategories) {
+        final movies = await ctg.getManyMany<Movie>(category, "movie_categories");
+        fetchedCategoryMoviesMap[category] = movies;
+        print("opo $fetchedCategoryMoviesMap");
+      }
+
+      setState(() {
+        all_movies=fetchedMovies;
+        categories = fetchedCategories;
+        categoryMoviesMap = fetchedCategoryMoviesMap;
       });
+
     } catch (e) {
       print("Erreur: $e");
     }finally {
-      print("oh $movies ");
-      //print("oh $categories ");
       setState(() {
         isLoading = false;
       });
@@ -57,44 +67,56 @@ class _MoviesState extends State<Movies> {
       );
     }
     return Scaffold(
-
         appBar: AppBar(
-
           title: Text("VOS FILMS:${widget.profile_name}",style: TextStyle(fontSize:20,fontWeight: FontWeight.bold ),) ,
             //backgroundColor: Colors.purple,
           ),
         body:GridView.builder(
             padding: const EdgeInsets.all(10),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,mainAxisSpacing: 10,crossAxisSpacing: 10),
-            itemCount:movies.length ,
+              crossAxisCount: 4,mainAxisSpacing: 10,crossAxisSpacing: 10),
+            itemCount:categoryMoviesMap.length ,
             itemBuilder: (context,index) {
-               List<Movie> categoryMovies=  ctg.getManyMany<Movie>(categories[index], "movie_categories") as List<Movie>;
-               print("oh $categoryMovies");
-               return Card(
-                  elevation: 5,
-                  color: Colors.purple,
-                  child: categoryMovies.isEmpty
-                      ? const Center(child: Text("Aucun film disponible"))
-                      :Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircleAvatar(
-                            backgroundImage: NetworkImage(categoryMovies[index].coverUrl),
-                            radius: 30,
+              var  category = categories[index];
+              var movies = categoryMoviesMap[category] ?? [];
+
+              return Card(
+                elevation: 5,
+                color: Colors.purple.shade100,
+                child: movies.isEmpty
+                    ? const Center(child: Text("Aucun film disponible"))
+                    : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: movies.map((movie) {
+                    return Column(
+                      children: [
+                        CircleAvatar(
+                          backgroundImage: NetworkImage(movie.coverUrl ?? ''),
+                          radius: 30,
+                        ),
+                        ListTile(
+                          title: Text(movie.title),
+                          subtitle: Text("${movie.views} vues"),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            movie.description,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          ListTile(
-                              title:Text(categoryMovies[index].title) ,
-                            subtitle: Text(categoryMovies[index].views as String),
-                          ),
-                          Text(categoryMovies[index].description,style: TextStyle(fontSize: 20,
-                            fontWeight: FontWeight.bold,),
-                          )
-                        ],
-                      ),
+                        ),
+                      ],
                     );
-                    }
+                  }).toList(),
                 ),
+              );
+            }
+            ),
         ) ;
   }
 }
