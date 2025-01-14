@@ -124,7 +124,7 @@ abstract class FirebaseFirestoreRepository<T extends Model>
         if ((type & searchTypeEndsWith != 0) ||
             (type & searchTypeContains != 0) ||
             (type & searchTypeIgnoreCase != 0)) {
-          // Préparation pour le filtrage côté client
+          f1.add(Filter(field, isNotEqualTo: null));
         }
         switch (f1.length) {
           case 1:
@@ -132,6 +132,9 @@ abstract class FirebaseFirestoreRepository<T extends Model>
             break;
           case 2:
             f.add(Filter.or(f1[0], f1[1]));
+            break;
+          case 3:
+            f.add(Filter.or(f1[0], f1[1], f1[2]));
             break;
         }
       } else {
@@ -149,7 +152,7 @@ abstract class FirebaseFirestoreRepository<T extends Model>
           "Pagination avec offset n'est pas directement supportée par Firestore.");
     }
 
-    query.where(fromListFilter(f, operator));
+    query = query.where(fromListFilter(f, operator));
 
     // Exécuter la requête Firestore
     QuerySnapshot snapshot = await query.get();
@@ -160,11 +163,11 @@ abstract class FirebaseFirestoreRepository<T extends Model>
           final data = doc.data() as Map<String, dynamic>;
 
           // Filtrer les résultats côté client
-          for (var field in filters.keys) {
-            if (filters[field] is String && data[field] is String) {
-              String filterValue = filters[field];
-              String documentValue = data[field];
-              int type = searchTypes?[field] ?? searchTypeExact;
+      for (var field in filters.keys) {
+        if (filters[field] is String && data[field] is String) {
+          String filterValue = filters[field];
+          String documentValue = data[field];
+          int type = searchTypes?[field] ?? searchTypeExact;
 
               // Ignore case
               if (type & searchTypeIgnoreCase != 0) {
@@ -173,10 +176,10 @@ abstract class FirebaseFirestoreRepository<T extends Model>
               }
 
               // Contains
-              if (type & searchTypeContains != 0 &&
-                  !documentValue.contains(filterValue)) {
-                return null;
-              }
+          if (type & searchTypeContains != 0 &&
+              !documentValue.contains(filterValue)) {
+            return null;
+          }
 
               // EndsWith
               if (type & searchTypeEndsWith != 0 &&
@@ -187,7 +190,7 @@ abstract class FirebaseFirestoreRepository<T extends Model>
           }
 
           return fromFirestoreMap[T]!(doc.exists ? doc.data() : {}, doc.id);
-        })
+    })
         .whereType<T>()
         .toList();
 
