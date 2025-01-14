@@ -93,10 +93,9 @@ class _ManagementScreenState extends State<ManagementScreen> {
                             .data!.length, // Replace with the number of users
                         itemBuilder: (context, index) {
                           var item = snapshot.data![index];
-                          var title = "";
-                          for (var field in widget.cardTitleFields) {
-                            title = "$title${item[field] ?? ''}";
-                          }
+                          var title = widget.cardTitleFields
+                              .map((field) => item[field])
+                              .join(" ");
                           return Card(
                             child: ListTile(
                               leading: CircleAvatar(

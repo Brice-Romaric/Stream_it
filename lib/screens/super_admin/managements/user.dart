@@ -3,6 +3,7 @@ import 'package:stream_it/models/user.dart';
 import 'package:stream_it/repositories/user.dart';
 import 'package:stream_it/screens/super_admin/managements/screens/form.dart';
 import 'package:stream_it/screens/super_admin/managements/screens/management.dart';
+import 'package:stream_it/widgets/fields/field.dart';
 
 import '../../../repositories/repository.dart';
 
@@ -14,23 +15,37 @@ class UserFormScreen extends FormScreen<User> {
   Widget buildFieldsContainer(BuildContext context) {
     return Column(
       children: [
-        TextFormField(
+        Field(
+          placeholder: "Nom",
+          required: true,
+          initialValue: item?['last_name'],
+          fields: fields,
+          name: "last_name",
+        ),
+        Field(
+          placeholder: "Prénom",
+          required: true,
+          initialValue: item?['first_name'],
+          fields: fields,
+          name: "first_name",
+        ),
+        Field(
+          placeholder: "Email",
+          type: "email",
+          required: true,
           initialValue: item?['email'],
-          decoration: const InputDecoration(labelText: 'Email'),
-          keyboardType: TextInputType.emailAddress,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Email est requis';
-            }
-            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-              return 'Entrez un email valide';
-            }
-            return null;
-          },
-          onSaved: (value) {
-            fields['email'] = value;
-          },
-        )
+          fields: fields,
+          name: "email",
+        ),
+        Field(
+          type: "select",
+          placeholder: "Rôle",
+          required: true,
+          initialValue: item?['role'],
+          fields: fields,
+          name: "role",
+          selectOptions: ["user", "super_admin"],
+        ),
       ],
     );
   }
