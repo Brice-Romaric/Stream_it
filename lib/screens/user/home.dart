@@ -4,7 +4,9 @@ import 'package:stream_it/repositories/user.dart';
 import 'package:stream_it/screens/user/movies.dart';
 
 import '../../models/avatar.dart';
+import '../../models/profile.dart';
 import '../../repositories/avatar.dart';
+import '../../repositories/profile.dart';
 import 'addProfils.dart';
 
 
