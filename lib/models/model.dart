@@ -33,6 +33,8 @@ abstract class Model extends Iterable<MapEntry<String, dynamic>> with ChangeNoti
 
   operator [](String field) => toJson()[field];
 
+  operator []=(String field, dynamic value) => toJson()[field] = value;
+
   /// Champ 'id' present dans toutes les collections
   /// firebase firestore et modifiable uniquement si aucune valeur
   /// n'est presente (null)
@@ -50,10 +52,6 @@ abstract class Model extends Iterable<MapEntry<String, dynamic>> with ChangeNoti
   Model copyWith({
     String? id
   });
-
-  /// Contructeur permettant de creer une instance de ce model a
-  /// partir d'un objet ("quelconque")
-  factory Model.fromData(dynamic data) => throw UnimplementedError();
 
   /// Contructeur permettant de creer une instance de ce model a
   /// partir d'un document de type DocumentSnapshot de firebase
@@ -86,5 +84,15 @@ abstract class Model extends Iterable<MapEntry<String, dynamic>> with ChangeNoti
   @override
   String toString() {
     return toRawJson();
+  }
+
+  static String modelToColletionName<T extends Model>([Type? type]) {
+    return (type ?? T)
+        .toString()
+        .replaceAllMapped(
+          RegExp(r'(?<!^)([A-Z])'),
+          (Match match) => '_${match.group(1)!}',
+        )
+        .toLowerCase();
   }
 }
