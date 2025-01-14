@@ -58,7 +58,7 @@ class _UserPageHomeState extends State<UserPageHome> {
     return GestureDetector(
        onTap: (){
          Navigator.push(context, MaterialPageRoute(builder: (context){
-            return Movies(profile_name:profile.name);
+            return Movies(profile_name:profile.name,profile_id:profile.id,avatar_url:avatar.url,);
            }
          )
          );
