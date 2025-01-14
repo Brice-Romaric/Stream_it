@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:stream_it/models/profile.dart';
 import 'package:stream_it/models/user.dart';
-import 'package:stream_it/repositories/profile.dart';
 import 'package:stream_it/repositories/user.dart';
 import 'package:stream_it/screens/user/movies.dart';
 

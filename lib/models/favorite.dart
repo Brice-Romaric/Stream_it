@@ -53,19 +53,9 @@ class Favorite extends Model {
       );
 
   /// Contructeur permettant de creer une instance de ce model a
-  /// partir d'un objet ("quelconque")
-  factory Favorite.fromData(dynamic data) {
-    Map<String, dynamic> d = {};
-    for (var field in modelFields) {
-      d[field] = data[field];
-    }
-    return Favorite.fromJson(data);
-  }
-
-  /// Contructeur permettant de creer une instance de ce model a
   /// partir d'un document de type DocumentSnapshot de firebase
   factory Favorite.fromFirebaseDocument(DocumentSnapshot document) {
-    return Favorite.fromData(document.data()!);
+    return Favorite.fromJson(document.data()! as Map<String, dynamic>);
   }
 
   /// Contructeur permettant de creer une instance de ce model a

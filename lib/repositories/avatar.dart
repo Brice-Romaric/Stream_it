@@ -3,7 +3,11 @@ import 'package:stream_it/repositories/firebase_firestore.dart';
 
 class AvatarRepository extends FirebaseFirestoreRepository<Avatar> {
   AvatarRepository() {
-    collectionName = Avatar.modelName;
-    fromFirestore = (data, id) => Avatar.fromJson({...data, "id": id});
+    fromFirestoreMap[Avatar] =
+        (data, id) => Avatar.fromJson({...data, "id": id});
   }
+
+  static final AvatarRepository _instance = AvatarRepository();
+
+  static get instance => _instance;
 }

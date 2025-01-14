@@ -3,7 +3,11 @@ import 'package:stream_it/repositories/firebase_firestore.dart';
 
 class FavoriteRepository extends FirebaseFirestoreRepository<Favorite> {
   FavoriteRepository() {
-    collectionName = Favorite.modelName;
-    fromFirestore = (data, id) => Favorite.fromJson({...data, "id": id});
+    fromFirestoreMap[Favorite] =
+        (data, id) => Favorite.fromJson({...data, "id": id});
   }
+
+  static final FavoriteRepository _instance = FavoriteRepository();
+
+  static get instance => _instance;
 }

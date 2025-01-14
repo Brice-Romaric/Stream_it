@@ -132,19 +132,9 @@ class Movie extends Model {
       );
 
   /// Contructeur permettant de creer une instance de ce model a
-  /// partir d'un objet ("quelconque")
-  factory Movie.fromData(dynamic data) {
-    Map<String, dynamic> d = {};
-    for (var field in modelFields) {
-      d[field] = data[field];
-    }
-    return Movie.fromJson(data);
-  }
-
-  /// Contructeur permettant de creer une instance de ce model a
   /// partir d'un document de type DocumentSnapshot de firebase
   factory Movie.fromFirebaseDocument(DocumentSnapshot document) {
-    return Movie.fromData(document.data()!);
+    return Movie.fromJson(document.data()! as Map<String, dynamic>);
   }
 
   /// Contructeur permettant de creer une instance de ce model a
