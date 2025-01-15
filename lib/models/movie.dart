@@ -135,7 +135,7 @@ class Movie extends Model {
         duration: json["duration"],
         url: json["url"],
         coverUrl: json["cover_url"],
-        views: json["views"],
+        views: json["views"] ?? 0,
       );
 
   @override
