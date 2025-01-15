@@ -126,10 +126,9 @@ class _AddProfilState extends State<AddProfil> {
                                   "avatar_id":AvatarId,
                                   "name":name,
                                   "user_id":userId
-                                });
-                                   ScaffoldMessenger.of(context).showSnackBar(
-                                       SnackBar(content: Text("nouveau profil créé"))
-                                   );
+                                }); ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text("nouveau profil créé"))
+                                );
 
                                 Navigator.pop(context, true);
                               }

@@ -3,6 +3,7 @@ import 'package:stream_it/repositories/favorite.dart';
 import 'package:stream_it/screens/user/watch_movie.dart';
 
 import '../../models/movie.dart';
+import '../../repositories/movie.dart';
 import '../../repositories/profile.dart';
 
 class Favorites extends StatefulWidget {
@@ -24,20 +25,18 @@ class _FavoritesState extends State<Favorites> {
 
   bool isLoading = true;
   var prf=ProfileRepository();
-
+  var flm=MovieRepository();
   List<Movie> all_movies = [];
 
   Future<void> recuperation() async{
     try{
       final fetchedmovies = await prf.getManyMany<Movie>(widget.profile_id, "favorite");
-      print("e $fetchedmovies");
       setState(() {
         all_movies=fetchedmovies;
       });
     }catch (e) {
       print("Erreur: $e");
     }finally {
-      print("e $all_movies");
       setState(() {
         isLoading = false;
       });
@@ -65,14 +64,16 @@ class _FavoritesState extends State<Favorites> {
             ),
           )
           :GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,mainAxisSpacing: 20,crossAxisSpacing: 20),
+          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+           mainAxisSpacing: 20,crossAxisSpacing: 20, maxCrossAxisExtent: 350,mainAxisExtent: 250),
           itemCount: all_movies.length,
           padding: EdgeInsets.all(10),
           itemBuilder: (context,index){
             var movie=all_movies[index];
             return GestureDetector(
               onTap: (){
+                movie.views++;
+                flm.update(movie);
                 //logique incrementation des vues
                 Navigator.push(context, MaterialPageRoute(builder: (context){
                   return WatchMovie(profile_name:widget.profile_name,profile_id:widget.profile_id,
@@ -81,13 +82,15 @@ class _FavoritesState extends State<Favorites> {
                 );
               },
               child: Card(
+
                 elevation: 5,
                 color: Colors.purple.shade100,
                       child: Column(
                           children: [
+                            SizedBox(height:10),
                             CircleAvatar(
                               backgroundImage: NetworkImage(movie.coverUrl ?? ''),
-                              radius: 40,
+                              radius: 50,
                             ),
                             Padding(
                               padding: const EdgeInsets.all(8.0),
@@ -103,16 +106,13 @@ class _FavoritesState extends State<Favorites> {
                             Text("${movie.views} vues",
                               style: const TextStyle(fontSize: 14, color: Colors.grey),
                             ),
-                             Text(
-                                movie.description,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                              ),
+                            IconButton(
+                                onPressed: () {
+                                  setState(() {
+
+                                  });
+                                },
+                                icon: const Icon(Icons.favorite_border_outlined)),
                           ]
                       )
               ),

@@ -1,13 +1,19 @@
-
 import 'package:flutter/material.dart';
-import 'package:stream_it/screens/user/history.dart';
+
 import 'package:stream_it/screens/user/watch_movie.dart';
 
+import 'package:stream_it/models/history.dart';
 import '../../models/category.dart';
+import '../../models/favorite.dart';
 import '../../models/movie.dart';
+
+import 'package:stream_it/repositories/favorite.dart';
+import 'package:stream_it/repositories/history.dart';
 import '../../repositories/category.dart';
 import '../../repositories/movie.dart';
+
 import 'favorite.dart';
+import 'history.dart';
 
 class Movies extends StatefulWidget {
   final profile_name;
@@ -30,6 +36,8 @@ class _MoviesState extends State<Movies> {
   bool isLoading = true;
   var flm=MovieRepository();
   var ctg=CategoryRepository();
+  var fav=FavoriteRepository();
+   var hst=HistoryRepository();
 
   List<Movie> all_movies = [];
   List<Category> categories = [];
@@ -58,6 +66,17 @@ class _MoviesState extends State<Movies> {
       });
     }
   }
+
+  Future<bool> isFavorite(Movie movie) async {
+    try {
+      final result = await fav.search({"movie_id": movie.id, "profile_id": widget.profile_id});
+      return result.isNotEmpty;
+    } catch (e) {
+      print("Erreur lors de la vérification des favoris : $e");
+      return false;
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -111,12 +130,36 @@ class _MoviesState extends State<Movies> {
                         var movie = movies[movieIndex];
                         return GestureDetector(
                           onTap: (){
-                              //logique incrementation des vues
-                            Navigator.push(context, MaterialPageRoute(builder: (context){
-                              return WatchMovie(profile_name:widget.profile_name,profile_id:widget.profile_id,
-                                  movie_id:movie.id,movie_title:movie.title);
+                            movie.views++;
+                            var now = DateTime.now();
+                            History hst1=History(profileId:widget.profile_id , movieId:movie.id!, datetime: now );
+                            hst.search({"movie_id": movie.id, "profile_id": widget.profile_id}).then((result){
+                                if(result.isEmpty) {
+                                  flm.update(movie).then((_) {
+                                    hst.create(hst1).then((_) {
+                                      setState(() {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text(
+                                                "Ajout aux historiques")
+                                            )
+                                        );
+                                      });
+                                    });
+                                  });
+                                }else{
+                                  flm.update(movie).then((_) {
+                                    setState(() {
+
+                                    });
+                                  });
+                                }
+                            }).then((_){
+                              Navigator.push(context, MaterialPageRoute(builder: (context){
+                                return WatchMovie(profile_name:widget.profile_name,profile_id:widget.profile_id,
+                                    movie_id:movie.id,movie_title:movie.title);
                               })
-                            );
+                              );
+                            });
                           },
                            child: Card(
                                 margin: const EdgeInsets.only(right: 10),
@@ -147,15 +190,31 @@ class _MoviesState extends State<Movies> {
                                           ),
                                           Padding(
                                             padding: const EdgeInsets.all(8.0),
-                                            child: Text(
-                                              movie.description,
-                                              style: const TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w400,
-                                              ),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                              textAlign: TextAlign.center,
+                                            child:  IconButton(
+                                              onPressed: () {
+                                                //ajout ou retrait dans favoris
+                                                Favorite fav1=Favorite(profileId:widget.profile_id , movieId:movie.id! );
+                                                fav.search({"movie_id": movie.id, "profile_id": widget.profile_id}).then((result){
+                                                  if(result.isEmpty){
+                                                    fav.create(fav1).then((_) {
+                                                        setState(() {
+                                                          ScaffoldMessenger.of(context).showSnackBar(
+                                                              SnackBar(content: Text("Ajout aux favoris"))
+                                                          );
+                                                        });
+                                                    });
+                                                  }else{
+                                                    fav.delete(result[0]).then((_){
+                                                      setState(() {
+                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                            SnackBar(content: Text("Retrait des favoris"))
+                                                        );
+                                                      });
+                                                    });
+                                                  }
+                                                });
+                                              },
+                                                icon: Icon(Icons.favorite_border_outlined )
                                             ),
                                           ),
                                         ]
@@ -169,7 +228,8 @@ class _MoviesState extends State<Movies> {
               ]
               );
             }
-            ),
+          ),
+
           drawer: Builder(
               builder: (context){
                   return Drawer(
@@ -189,7 +249,7 @@ class _MoviesState extends State<Movies> {
                               )
                          ),
                          ListTile(
-                           leading:Icon(Icons.heart_broken),
+                           leading:Icon(Icons.favorite_border_outlined),
                            title: Text("VOS FAVORIS"),
                            onTap:  () {
                               Navigator.push((context),MaterialPageRoute(builder: (context){
@@ -204,7 +264,7 @@ class _MoviesState extends State<Movies> {
                            title:Text("VOTRE HISTORIQUE"),
                            onTap:  () {
                                  Navigator.push((context),MaterialPageRoute(builder: (context){
-                                   return History(profile_name:widget.profile_name,profile_id:widget.profile_id);
+                                   return HistoryView(profile_name:widget.profile_name,profile_id:widget.profile_id);
                                  }
                               )
                              );
