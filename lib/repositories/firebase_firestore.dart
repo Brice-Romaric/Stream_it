@@ -1,15 +1,29 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:stream_it/models/avatar.dart';
+import 'package:stream_it/models/category.dart';
+import 'package:stream_it/models/favorite.dart';
+import 'package:stream_it/models/history.dart';
+import 'package:stream_it/models/model.dart';
+import 'package:stream_it/models/movie.dart';
+import 'package:stream_it/models/profile.dart';
+import 'package:stream_it/models/user.dart';
 import 'package:stream_it/repositories/repository.dart';
-
-import '../models/model.dart';
-import '../utils/filter.dart';
+import 'package:stream_it/utils/filter.dart';
 
 /// Specialisation de la classe abstraite 'Repository' pour qu'elle fonctionne
 /// avec firebase firestore
 abstract class FirebaseFirestoreRepository<T extends Model>
     implements Repository<T> {
   final String collectionName = Model.modelToColletionName<T>();
-  final Map<Type, Function(dynamic, String)> fromFirestoreMap = {};
+  final Map<Type, Function(dynamic, String)> fromFirestoreMap = {
+    User: (data, id) => User.fromJson({...data, "id": id}),
+    Profile: (data, id) => Profile.fromJson({...data, "id": id}),
+    Movie: (data, id) => Movie.fromJson({...data, "id": id}),
+    Avatar: (data, id) => Avatar.fromJson({...data, "id": id}),
+    Favorite: (data, id) => Favorite.fromJson({...data, "id": id}),
+    Category: (data, id) => Category.fromJson({...data, "id": id}),
+    History: (data, id) => History.fromJson({...data, "id": id})
+  };
 
   @override
   Future<T> create(dynamic item) async {
