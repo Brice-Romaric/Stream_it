@@ -116,7 +116,7 @@ class _ManagementScreenState extends State<ManagementScreen> {
                                 children: [
                                   IconButton(
                                     onPressed: () {
-                                      Navigator.push(context,
+                                      Navigator.push<bool>(context,
                                           MaterialPageRoute(builder: (context) {
                                         return widget.buildFormScreen(
                                             context,
@@ -124,7 +124,13 @@ class _ManagementScreenState extends State<ManagementScreen> {
                                             widget.title.substring(
                                                 0, widget.title.length - 1),
                                             item); // <- item
-                                      }));
+                                      })).then((result) {
+                                        if (result != null && result) {
+                                          setState(() {
+                                            getItems();
+                                          });
+                                        }
+                                      });
                                     },
                                     icon: const Icon(Icons.edit,
                                         color: Colors.blue),
@@ -134,7 +140,9 @@ class _ManagementScreenState extends State<ManagementScreen> {
                                       widget.repository
                                           .delete(item)
                                           .then((data) {
-                                        getItems();
+                                        setState(() {
+                                          getItems();
+                                        });
                                       });
                                     },
                                     icon: const Icon(Icons.delete,
@@ -158,7 +166,8 @@ class _ManagementScreenState extends State<ManagementScreen> {
                         ),
                         Padding(
                           padding: const EdgeInsets.only(top: 16),
-                          child: Text('Error: ${snapshot.error}'),
+                          child: Text(
+                              'Error: ${(snapshot.error as Error).stackTrace}'),
                         ),
                       ];
                     } else {
@@ -187,13 +196,19 @@ class _ManagementScreenState extends State<ManagementScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) {
+          Navigator.push<bool>(context, MaterialPageRoute(builder: (context) {
             return widget.buildFormScreen(
                 context,
                 widget.repository,
                 widget.title.substring(0, widget.title.length - 1),
                 null); // <- null
-          }));
+          })).then((result) {
+            if (result != null && result) {
+              setState(() {
+                getItems();
+              });
+            }
+          });
         },
         backgroundColor: Colors.purpleAccent,
         child: const Icon(

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:stream_it/models/avatar.dart';
+import 'package:stream_it/models/category.dart';
 import 'package:stream_it/models/model.dart';
+import 'package:stream_it/models/movie.dart';
+import 'package:stream_it/models/user.dart';
 import 'package:stream_it/repositories/repository.dart';
 
 extension StringExtension on String {
@@ -20,6 +24,13 @@ abstract class FormScreen<T extends Model> extends StatefulWidget {
   final Repository<T> repository;
   final Map<String, dynamic> fields = {};
 
+  final Map<Type, dynamic> fromJson = {
+    User: User.fromJson,
+    Movie: Movie.fromJson,
+    Category: Category.fromJson,
+    Avatar: Avatar.fromJson
+  };
+
   FormScreen(
       {super.key, this.item, required this.title, required this.repository});
 
@@ -33,11 +44,11 @@ abstract class FormScreen<T extends Model> extends StatefulWidget {
       formKey.currentState!.save();
       try {
         if (item == null) {
-          await repository.create(fields);
+          await repository.create(fromJson[T]!(fields));
         } else {
-          await repository.update({...item!.toJson(), ...fields});
+          await repository.update({...item!.toJson(), ...fromJson[T]!(fields)});
         }
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       } catch (e) {
         print('Erreur Impossible de sauvegarder : $e');
       } finally {}

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:stream_it/screens/super_admin/managements/avatar.dart';
 import 'package:stream_it/screens/super_admin/managements/category.dart';
 import 'package:stream_it/screens/super_admin/managements/movie.dart';
-
-import 'managements/avatar.dart';
-import 'managements/user.dart';
+import 'package:stream_it/screens/super_admin/managements/user.dart';
 
 class ManagementItem extends StatelessWidget {
   final String title;
@@ -62,17 +61,17 @@ class SuperAdminPageHome extends StatelessWidget {
     ManagementItem(
       title: "Films",
       icon: Icons.movie,
-      screen: () => MovieManagementHome(),
+      screen: () => MovieManagementScreen(),
     ),
     ManagementItem(
       title: "Catégories",
       icon: Icons.category,
-      screen: () => CategoryManagementHome(),
+      screen: () => CategoryManagementScreen(),
     ),
     ManagementItem(
       title: "Avatars",
       icon: Icons.image,
-      screen: () => AvatarManagementHome(),
+      screen: () => AvatarManagementScreen(),
     ),
   ];
 

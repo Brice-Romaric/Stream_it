@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:stream_it/models/user.dart';
+import 'package:stream_it/repositories/repository.dart';
 import 'package:stream_it/repositories/user.dart';
 import 'package:stream_it/screens/super_admin/managements/screens/form.dart';
 import 'package:stream_it/screens/super_admin/managements/screens/management.dart';
-import 'package:stream_it/widgets/fields/field.dart';
-
-import '../../../repositories/repository.dart';
+import 'package:stream_it/widgets/field.dart';
 
 class UserFormScreen extends FormScreen<User> {
   UserFormScreen(
@@ -15,21 +14,21 @@ class UserFormScreen extends FormScreen<User> {
   Widget buildFieldsContainer(BuildContext context) {
     return Column(
       children: [
-        Field(
+        Field<String>(
           placeholder: "Nom",
           required: true,
           initialValue: item?['last_name'],
           fields: fields,
           name: "last_name",
         ),
-        Field(
+        Field<String>(
           placeholder: "Prénom",
           required: true,
           initialValue: item?['first_name'],
           fields: fields,
           name: "first_name",
         ),
-        Field(
+        Field<String>(
           placeholder: "Email",
           type: "email",
           required: true,
@@ -37,7 +36,7 @@ class UserFormScreen extends FormScreen<User> {
           fields: fields,
           name: "email",
         ),
-        Field(
+        Field<String>(
           type: "select",
           placeholder: "Rôle",
           required: true,

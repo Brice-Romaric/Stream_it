@@ -139,7 +139,6 @@ class _FieldState<T> extends State<Field<T>> {
           }
       }
     }
-    print(widget.fields);
   }
 
   @override
@@ -183,17 +182,6 @@ class _FieldState<T> extends State<Field<T>> {
           dropdownDecoration: const DropdownDecoration(
             marginTop: 2,
             maxHeight: 500,
-            header: Padding(
-              padding: EdgeInsets.all(8),
-              child: Text(
-                'Select countries from the list',
-                textAlign: TextAlign.start,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
           ),
           dropdownItemDecoration: DropdownItemDecoration(
             selectedIcon: const Icon(Icons.check_box, color: Colors.green),
@@ -206,6 +194,14 @@ class _FieldState<T> extends State<Field<T>> {
         );
       default:
         switch (type) {
+          case "number":
+            inputFormatters = [
+              T == int
+                  ? FilteringTextInputFormatter.digitsOnly
+                  : FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,}'))
+            ];
+            keyboardType = TextInputType.number;
+            break;
           case "email":
             inputFormatters = [
               FilteringTextInputFormatter.allow(RegExp("[0-9@a-zA-Z.]"))
