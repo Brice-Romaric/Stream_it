@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stream_it/models/model.dart';
 import 'package:stream_it/models/user.dart';
 import 'package:stream_it/repositories/repository.dart';
 import 'package:stream_it/repositories/user.dart';
@@ -18,32 +19,32 @@ class UserFormScreen extends FormScreen<User> {
           placeholder: "Nom",
           required: true,
           initialValue: item?['last_name'],
-          fields: fields,
           name: "last_name",
+          onSave: onSave,
         ),
         Field<String>(
           placeholder: "Prénom",
           required: true,
           initialValue: item?['first_name'],
-          fields: fields,
           name: "first_name",
+          onSave: onSave,
         ),
         Field<String>(
           placeholder: "Email",
           type: "email",
           required: true,
           initialValue: item?['email'],
-          fields: fields,
           name: "email",
+          onSave: onSave,
         ),
         Field<String>(
           type: "select",
           placeholder: "Rôle",
           required: true,
           initialValue: item?['role'],
-          fields: fields,
           name: "role",
           selectOptions: ["user", "super_admin"],
+          onSave: onSave,
         ),
       ],
     );
@@ -55,7 +56,7 @@ class UserManagementScreen extends ManagementScreen<User> {
     title = "Utilisateurs";
     cardTitleFields = ["first_name", "last_name"];
     cardSubtitleFields = ["email"];
-    onSearchFields = User.modelFields;
+    onSearchFields = Model.modelInfoOf<User>()?.modelFields ?? [];
     repository = UserRepository.instance;
     maxItems = 50;
   }

@@ -34,9 +34,14 @@ class _ManagementScreenState extends State<ManagementScreen> {
     for (var field in widget.onSearchFields) {
       fields[field] = query;
     }
-    filteredItems =
-        widget.repository.search(fields, limit: widget.maxItems, isAnd: false);
-    setState(() {});
+    setState(() {
+      if (query.isEmpty) {
+        getItems();
+      } else {
+        filteredItems = widget.repository
+            .search(fields, limit: widget.maxItems, isAnd: false);
+      }
+    });
   }
 
   void getItems() {

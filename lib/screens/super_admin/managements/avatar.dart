@@ -18,7 +18,7 @@ class AvatarFormScreen extends FormScreen<Avatar> {
           placeholder: "URL",
           required: true,
           initialValue: item?['url'],
-          fields: fields,
+          onSave: onSave,
           name: "url",
         ),
       ],

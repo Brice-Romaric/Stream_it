@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stream_it/models/user.dart';
 import 'package:stream_it/screens/super_admin/managements/avatar.dart';
 import 'package:stream_it/screens/super_admin/managements/category.dart';
 import 'package:stream_it/screens/super_admin/managements/movie.dart';
@@ -53,6 +54,8 @@ class ManagementItem extends StatelessWidget {
 }
 
 class SuperAdminPageHome extends StatelessWidget {
+  final User user;
+
   static final List<ManagementItem> managementItems = [
     ManagementItem(
       title: "Utilisateurs",
@@ -75,7 +78,7 @@ class SuperAdminPageHome extends StatelessWidget {
     ),
   ];
 
-  const SuperAdminPageHome({super.key});
+  const SuperAdminPageHome({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {

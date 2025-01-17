@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:stream_it/models/avatar.dart';
-import 'package:stream_it/models/category.dart';
 import 'package:stream_it/models/model.dart';
-import 'package:stream_it/models/movie.dart';
-import 'package:stream_it/models/user.dart';
 import 'package:stream_it/repositories/repository.dart';
 
 extension StringExtension on String {
@@ -23,13 +19,7 @@ abstract class FormScreen<T extends Model> extends StatefulWidget {
   final String title;
   final Repository<T> repository;
   final Map<String, dynamic> fields = {};
-
-  final Map<Type, dynamic> fromJson = {
-    User: User.fromJson,
-    Movie: Movie.fromJson,
-    Category: Category.fromJson,
-    Avatar: Avatar.fromJson
-  };
+  final List controllers = [];
 
   FormScreen(
       {super.key, this.item, required this.title, required this.repository});
@@ -39,14 +29,60 @@ abstract class FormScreen<T extends Model> extends StatefulWidget {
 
   Widget buildFieldsContainer(BuildContext context);
 
+  void onSave(String? name, dynamic value) {
+    if (name != null) {
+      fields[name] = value;
+    }
+  }
+
   void onSubmit(BuildContext context, GlobalKey<FormState> formKey) async {
     if (formKey.currentState!.validate()) {
       formKey.currentState!.save();
       try {
+        var modelInfo = Model.modelInfoOf<T>()!;
+        Function fromJson = modelInfo.getCallable("fromJson");
         if (item == null) {
-          await repository.create(fromJson[T]!(fields));
+          T i = await repository.create(fromJson(fields));
+          for (var entry in fields.entries) {
+            if (!modelInfo.modelFields.contains(entry.key)) {
+              var tableName = ModelInfo.collectionNameToModelName(entry.key);
+              if (entry.value is List) {
+                var relationName = modelInfo.relations[tableName];
+                if (relationName != null) {
+                  await repository.addManyMany(i, relationName,
+                      tableName: tableName, others: entry.value);
+                } else {
+                  await repository.addMany(i,
+                      tableName: tableName, others: entry.value);
+                }
+              } else {
+                await repository.setOne(i, entry.value, tableName: tableName);
+              }
+            }
+          }
         } else {
-          await repository.update({...item!.toJson(), ...fromJson[T]!(fields)});
+          T i = await repository.update(fromJson({...fields, "id": item!.id}));
+          for (var entry in fields.entries) {
+            if (!modelInfo.modelFields.contains(entry.key)) {
+              var tableName = ModelInfo.collectionNameToModelName(entry.key);
+              if (entry.value is List) {
+                var relationName = modelInfo.relations[tableName];
+                if (relationName != null) {
+                  await repository.removeManyMany(i, relationName,
+                      tableName: tableName, all: true);
+                  await repository.addManyMany(i, relationName,
+                      tableName: tableName, others: entry.value);
+                } else {
+                  await repository.removeMany(i,
+                      tableName: tableName, all: true);
+                  await repository.addMany(i,
+                      tableName: tableName, others: entry.value);
+                }
+              } else {
+                await repository.setOne(i, entry.value, tableName: tableName);
+              }
+            }
+          }
         }
         Navigator.pop(context, true);
       } catch (e) {

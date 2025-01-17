@@ -4,13 +4,23 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:stream_it/models/model.dart';
 
 class User extends Model {
-  static get modelName {
-    return "user";
-  }
-
-  static get modelFields {
-    return ["id", "first_name", "last_name", "email", "role"];
-  }
+  static final bool isRegisteredModel = (() {
+    Model.registerModel<User>(ModelInfo(modelFields: [
+      "id",
+      "first_name",
+      "last_name",
+      "email",
+      "role"
+    ], callables: [
+      User.new,
+      User.fromFirebaseDocument,
+      User.fromJson,
+      User.fromRawJson
+    ], relations: {
+      "profile": null
+    }));
+    return true;
+  })();
 
   String _firstName;
   String _lastName;
@@ -26,7 +36,8 @@ class User extends Model {
   })  : _firstName = firstName,
         _lastName = lastName,
         _email = email,
-        _role = role;
+        _role = role,
+        super(isRegisteredModel: User.isRegisteredModel);
 
   String get firstName => _firstName;
 

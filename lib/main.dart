@@ -1,11 +1,18 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:stream_it/models/model.dart';
+import 'package:stream_it/models/user.dart' as models;
+import 'package:stream_it/repositories/user.dart';
 import 'package:stream_it/screens/account/login.dart';
 import 'package:stream_it/screens/account/signup.dart';
+import 'package:stream_it/screens/super_admin/home.dart';
+import 'package:stream_it/screens/user/home.dart';
 
 import 'firebase_options.dart';
 
 Future<void> main() async {
+  loadModels();
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(
@@ -23,11 +30,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.purple),
-          useMaterial3: true,
-          appBarTheme: AppBarTheme(color: Colors.purpleAccent,
-            titleTextStyle: TextStyle(color: Colors.white)
-          ),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.purple),
+        useMaterial3: true,
+        appBarTheme: AppBarTheme(
+            color: Colors.purpleAccent,
+            titleTextStyle: TextStyle(color: Colors.white)),
       ),
       home: MonScaffold(),
     );
@@ -42,51 +49,107 @@ class MonScaffold extends StatefulWidget {
 }
 
 class _MonScaffoldState extends State<MonScaffold> {
+  Future<models.User?>? user;
+  var _number = 0;
 
-  var _number=0;
-
-  setNumber(int number){
+  setNumber(int number) {
     setState(() {
-      _number=number;
+      _number = number;
     });
   }
 
   @override
+  void initState() {
+    super.initState();
+    var userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      user = UserRepository.instance.getById(userId);
+    } else {
+      user = Future<models.User?>.value();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: [
-          Text("Connexion"),
-          Text("Inscription"),
-          ][_number],
-      ),
-      body: [
-        Login(),
-        Signup(),
-      ][_number] ,
-
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _number ,
-         selectedItemColor: Colors.red,
-          unselectedItemColor: Colors.brown,
-          iconSize: 32,
-          backgroundColor: Colors.purple[200],
-          onTap: (index){
-            setNumber(index);
-          },
-          items: [
-            BottomNavigationBarItem(
-                icon: Icon(Icons.accessibility_new_sharp),
-                label: 'Connexion'
-            ),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.accessibility_new_sharp),
-                label: 'Inscription'
-            ),
-          ]
-
-      ),
-    );
+    return FutureBuilder(
+        future: user,
+        builder: (context, snapshot) {
+          List<Widget> children;
+          if (snapshot.hasData) {
+            if (snapshot.data != null) {
+              if (snapshot.data!.role == "super_admin") {
+                return SuperAdminPageHome(
+                  user: snapshot.data!,
+                );
+              } else {
+                return UserPageHome();
+              }
+            } else {
+              return Scaffold(
+                appBar: AppBar(
+                  title: [
+                    Text("Connexion"),
+                    Text("Inscription"),
+                  ][_number],
+                ),
+                body: [
+                  Login(),
+                  Signup(),
+                ][_number],
+                bottomNavigationBar: BottomNavigationBar(
+                    currentIndex: _number,
+                    selectedItemColor: Colors.red,
+                    unselectedItemColor: Colors.brown,
+                    iconSize: 32,
+                    backgroundColor: Colors.purple[200],
+                    onTap: (index) {
+                      setNumber(index);
+                    },
+                    items: [
+                      BottomNavigationBarItem(
+                          icon: Icon(Icons.accessibility_new_sharp),
+                          label: 'Connexion'),
+                      BottomNavigationBarItem(
+                          icon: Icon(Icons.accessibility_new_sharp),
+                          label: 'Inscription'),
+                    ]),
+              );
+            }
+          } else if (snapshot.hasError) {
+            children = <Widget>[
+              const Icon(
+                Icons.error_outline,
+                color: Colors.red,
+                size: 60,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Text('Error: ${(snapshot.error as Error).stackTrace}'),
+              ),
+            ];
+          } else {
+            children = const <Widget>[
+              SizedBox(
+                width: 60,
+                height: 60,
+                child: CircularProgressIndicator(),
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 16),
+                child: Text('Un instant...'),
+              ),
+            ];
+          }
+          return Scaffold(
+              appBar: AppBar(
+                title: Text("StreamIt"),
+              ),
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: children,
+                ),
+              ));
+        });
   }
 }
-

@@ -4,18 +4,25 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:stream_it/models/model.dart';
 
 class Profile extends Model {
-  static get modelName {
-    return "profile";
-  }
-
-  static get modelFields {
-    return [
+  static final bool isRegisteredModel = (() {
+    Model.registerModel<Profile>(ModelInfo(modelFields: [
       "id",
       "user_id",
       "avatar_id",
       "name",
-    ];
-  }
+    ], callables: [
+      Profile.new,
+      Profile.fromFirebaseDocument,
+      Profile.fromJson,
+      Profile.fromRawJson
+    ], relations: {
+      "user": null,
+      "avatar": null,
+      "favorite": null,
+      "history": null,
+    }));
+    return true;
+  })();
 
   String _userId;
   String _avatarId;
@@ -28,7 +35,8 @@ class Profile extends Model {
     required String name,
   })  : _name = name,
         _avatarId = avatarId,
-        _userId = userId;
+        _userId = userId,
+        super(isRegisteredModel: Profile.isRegisteredModel);
 
   @override
   Profile copyWith({

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:stream_it/models/user.dart' as models;
 import 'package:stream_it/screens/super_admin/home.dart';
 import 'package:stream_it/screens/user/home.dart';
 
@@ -99,7 +100,10 @@ class _LoginState extends State<Login> {
                                 case 'super_admin':
                                   Navigator.push(context,
                                       MaterialPageRoute(builder: (context) {
-                                    return SuperAdminPageHome();
+                                    return SuperAdminPageHome(
+                                      user:
+                                          models.User.fromFirebaseDocument(doc),
+                                    );
                                   }));
                                   break;
                                 case 'user':

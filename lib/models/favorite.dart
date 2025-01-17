@@ -4,13 +4,22 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:stream_it/models/model.dart';
 
 class Favorite extends Model {
-  static get modelName {
-    return "favorite";
-  }
-
-  static get modelFields {
-    return ["id", "movie_id", "profile_id"];
-  }
+  static final bool isRegisteredModel = (() {
+    Model.registerModel<Favorite>(ModelInfo(modelFields: [
+      "id",
+      "movie_id",
+      "profile_id"
+    ], callables: [
+      Favorite.new,
+      Favorite.fromFirebaseDocument,
+      Favorite.fromJson,
+      Favorite.fromRawJson
+    ], relations: {
+      "movie": null,
+      "profile": null,
+    }));
+    return true;
+  })();
 
   String _profileId;
   String _movieId;
@@ -20,7 +29,8 @@ class Favorite extends Model {
     required String profileId,
     required String movieId,
   })  : _movieId = movieId,
-        _profileId = profileId;
+        _profileId = profileId,
+        super(isRegisteredModel: Favorite.isRegisteredModel);
 
   String get movieId => _movieId;
 

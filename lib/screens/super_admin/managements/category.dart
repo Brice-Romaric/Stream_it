@@ -18,7 +18,7 @@ class CategoryFormScreen extends FormScreen<Category> {
           placeholder: "Nom",
           required: true,
           initialValue: item?['name'],
-          fields: fields,
+          onSave: onSave,
           name: "name",
         ),
       ],

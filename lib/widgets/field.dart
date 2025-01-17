@@ -2,7 +2,71 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
 
-class Field<T> extends StatefulWidget {
+class _MultiDropdownFormField<T extends Object> extends FormField<List<T>> {
+  _MultiDropdownFormField({
+    super.key,
+    super.onSaved,
+    required widget,
+    required getValue,
+    required List<DropdownItem<T>> items,
+    required MultiSelectController<T> controller,
+    super.validator,
+  }) : super(
+          initialValue: items
+              .where((item) => item.selected)
+              .map((item) => item.value)
+              .toList(),
+          builder: (FormFieldState<List<T>> state) {
+            return MultiDropdown<T>(
+              items: items,
+              controller: controller,
+              singleSelect: !widget.selectMultiple,
+              enabled: true,
+              searchEnabled: true,
+              chipDecoration: const ChipDecoration(
+                backgroundColor: Colors.yellow,
+                wrap: true,
+                runSpacing: 2,
+                spacing: 10,
+              ),
+              fieldDecoration: FieldDecoration(
+                hintText: widget.placeholder,
+                hintStyle: const TextStyle(color: Colors.black87),
+                prefixIcon: widget.leading,
+                suffixIcon: widget.trailing,
+                showClearIcon: false,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+              dropdownDecoration: const DropdownDecoration(
+                marginTop: 2,
+                maxHeight: 500,
+              ),
+              dropdownItemDecoration: DropdownItemDecoration(
+                selectedIcon: const Icon(Icons.check_box, color: Colors.green),
+                disabledIcon: Icon(Icons.lock, color: Colors.grey.shade300),
+              ),
+              validator: widget.validator,
+              onSelectionChange: (value) {
+                state.didChange(value);
+                if (widget.onChange != null) {
+                  widget.onChange!(widget.name, getValue(value));
+                }
+              },
+            );
+          },
+        );
+}
+
+class Field<T extends Object> extends StatefulWidget {
   final String? name;
   final bool required;
   final dynamic controller;
@@ -12,7 +76,6 @@ class Field<T> extends StatefulWidget {
   final Color? borderColor;
   final double? borderRadius;
   final dynamic initialValue;
-  final Map<String, dynamic>? fields;
   final String? type;
   final String? selectLabelField;
   final String? selectSearchLabel;
@@ -21,6 +84,8 @@ class Field<T> extends StatefulWidget {
   final bool selectMultiple;
   final Widget? leading;
   final Widget? trailing;
+  final void Function(String?, dynamic)? onSave;
+  final void Function(String?, dynamic)? onChange;
 
   Field(
       {super.key,
@@ -33,7 +98,6 @@ class Field<T> extends StatefulWidget {
       this.borderRadius,
       this.initialValue,
       this.name,
-      this.fields,
       this.type,
       this.invalidMessage,
       this.selectOptions,
@@ -41,7 +105,9 @@ class Field<T> extends StatefulWidget {
       this.selectLabelField,
       this.leading,
       this.trailing,
-      this.selectSearchLabel});
+      this.selectSearchLabel,
+      this.onSave,
+      this.onChange});
 
   @override
   State<Field<T>> createState() => _FieldState();
@@ -69,10 +135,16 @@ class Field<T> extends StatefulWidget {
   }
 }
 
-class _FieldState<T> extends State<Field<T>> {
+class _FieldState<T extends Object> extends State<Field<T>> {
   Color? borderColor;
   String? dropdownValue;
-  List<DropdownItem<Object>> dropdownValues = [];
+  dynamic controller;
+  List<DropdownItem<T>> dropdownValues = [];
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -83,7 +155,7 @@ class _FieldState<T> extends State<Field<T>> {
           bool selected = false;
           if (widget.initialValue != null) {
             if (widget.initialValue is String) {
-              if (isString && option == widget.initialValue) {
+              if (option == widget.initialValue) {
                 selected = true;
               }
               if (!isString &&
@@ -92,9 +164,8 @@ class _FieldState<T> extends State<Field<T>> {
                 selected = true;
               }
             } else if (widget.initialValue is! List) {
-              if (isString &&
-                  option ==
-                      widget.initialValue[widget.selectLabelField ?? "id"]) {
+              if (option ==
+                  widget.initialValue[widget.selectLabelField ?? "id"]) {
                 selected = true;
               }
               if (!isString &&
@@ -103,41 +174,39 @@ class _FieldState<T> extends State<Field<T>> {
                 selected = true;
               }
             } else {
-              if (isString && widget.initialValue.contains(option)) {
+              if (widget.initialValue.contains(option)) {
                 selected = true;
-              }
-              if (!isString &&
+              } else if (!isString &&
                   widget.initialValue
                       .contains(option[widget.selectLabelField ?? "id"])) {
                 selected = true;
               }
             }
           }
-          return DropdownItem(
+          return DropdownItem<T>(
               label:
                   isString ? option : option[widget.selectLabelField ?? "id"],
-              value: option as Object,
+              value: option,
               selected: selected);
         }).toList() ??
         [];
   }
 
-  onChanged(dynamic value) {
-    if (widget.fields != null && widget.name != null) {
-      switch (T) {
-        case int:
-          widget.fields![widget.name!] = int.parse(value!);
-          break;
-        case double:
-          widget.fields![widget.name!] = double.parse(value!);
-          break;
-        default:
-          if ((widget.type ?? "text") == "select" && !widget.selectMultiple) {
-            widget.fields![widget.name!] = value[0];
-          } else {
-            widget.fields![widget.name!] = value;
-          }
-      }
+  dynamic _getValue(dynamic value) {
+    switch (T) {
+      case int:
+        return int.parse(value!) as T;
+      case double:
+        return double.parse(value!) as T;
+      default:
+        var type = widget.type ?? "text";
+        if (type == "select" && !widget.selectMultiple) {
+          return value.isNotEmpty ? value[0] as T : null;
+        } else if (type == "select" && widget.selectMultiple) {
+          return value as List<T>;
+        } else {
+          return value as T;
+        }
     }
   }
 
@@ -147,52 +216,29 @@ class _FieldState<T> extends State<Field<T>> {
     List<TextInputFormatter>? inputFormatters = widget.inputFormatters;
     TextInputType? keyboardType = widget.keyboardType;
     String type = widget.type ?? "text";
+    controller = widget.controller;
 
     switch (type) {
       case "select":
-        return MultiDropdown(
-          items: dropdownValues,
-          controller: widget.controller,
-          singleSelect: !widget.selectMultiple,
-          enabled: true,
-          searchEnabled: true,
-          chipDecoration: const ChipDecoration(
-            backgroundColor: Colors.yellow,
-            wrap: true,
-            runSpacing: 2,
-            spacing: 10,
+        controller ??= MultiSelectController<T>();
+        print(T);
+        return Padding(
+          padding: const EdgeInsets.all(5.0),
+          child: _MultiDropdownFormField<T>(
+            widget: widget,
+            getValue: _getValue,
+            items: dropdownValues,
+            controller: controller,
+            onSaved: (value) {
+              if (widget.onSave != null) {
+                widget.onSave!(widget.name, _getValue(value));
+              }
+            },
           ),
-          fieldDecoration: FieldDecoration(
-            hintText: widget.placeholder,
-            hintStyle: const TextStyle(color: Colors.black87),
-            prefixIcon: widget.leading,
-            suffixIcon: widget.trailing,
-            showClearIcon: false,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.grey),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Colors.black87,
-              ),
-            ),
-          ),
-          dropdownDecoration: const DropdownDecoration(
-            marginTop: 2,
-            maxHeight: 500,
-          ),
-          dropdownItemDecoration: DropdownItemDecoration(
-            selectedIcon: const Icon(Icons.check_box, color: Colors.green),
-            disabledIcon: Icon(Icons.lock, color: Colors.grey.shade300),
-          ),
-          validator: widget.validator,
-          onSelectionChange: (selectedItems) {
-            onChanged(selectedItems);
-          },
         );
       default:
+        controller ??=
+            TextEditingController(text: "${widget.initialValue ?? ''}");
         switch (type) {
           case "number":
             inputFormatters = [
@@ -209,40 +255,42 @@ class _FieldState<T> extends State<Field<T>> {
             keyboardType = TextInputType.emailAddress;
             break;
         }
-        return TextFormField(
-          initialValue: "${widget.initialValue ?? ''}",
-          inputFormatters: inputFormatters,
-          autocorrect: false,
-          autovalidateMode: AutovalidateMode.onUserInteraction,
-          controller: widget.controller,
-          decoration: InputDecoration(
-            prefixIcon: widget.leading,
-            suffixIcon: widget.trailing,
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(borderRadius),
+        return Padding(
+          padding: const EdgeInsets.all(5.0),
+          child: TextFormField(
+            inputFormatters: inputFormatters,
+            autocorrect: false,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            controller: controller,
+            decoration: InputDecoration(
+              prefixIcon: widget.leading,
+              suffixIcon: widget.trailing,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(borderRadius),
+              ),
+              hintText: widget.placeholder,
+              hintStyle: TextStyle(fontSize: 16, color: Colors.black45),
+              fillColor: Colors.grey.shade200,
+              filled: true,
+              counterText: "",
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: borderColor!, width: 1.0),
+                borderRadius: BorderRadius.circular(borderRadius),
+              ),
             ),
-            hintText: widget.placeholder,
-            hintStyle: TextStyle(fontSize: 16, color: Colors.black45),
-            fillColor: Colors.grey.shade200,
-            filled: true,
-            counterText: "",
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: borderColor!, width: 1.0),
-              borderRadius: BorderRadius.circular(borderRadius),
-            ),
-          ),
-          keyboardType: keyboardType,
-          validator: widget.validator,
-          onChanged: (value) {
-            onChanged(value);
-            setState(() {
-              if (widget.validator(value) == null) {
-                borderColor = Color(0xFFE91e63);
-              } else {
-                borderColor = Colors.grey.shade300;
+            keyboardType: keyboardType,
+            validator: widget.validator,
+            onChanged: (value) {
+              if (widget.onChange != null) {
+                widget.onChange!(widget.name, _getValue(value));
               }
-            });
-          },
+            },
+            onSaved: (value) {
+              if (widget.onSave != null) {
+                widget.onSave!(widget.name, _getValue(value));
+              }
+            },
+          ),
         );
     }
   }

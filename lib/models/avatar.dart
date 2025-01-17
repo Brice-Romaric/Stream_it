@@ -4,20 +4,28 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:stream_it/models/model.dart';
 
 class Avatar extends Model {
-  static get modelName {
-    return "avatar";
-  }
-
-  static get modelFields {
-    return ["id", "url"];
-  }
+  static final bool isRegisteredModel = (() {
+    Model.registerModel<Avatar>(ModelInfo(modelFields: [
+      "id",
+      "url"
+    ], callables: [
+      Avatar.new,
+      Avatar.fromFirebaseDocument,
+      Avatar.fromJson,
+      Avatar.fromRawJson
+    ], relations: {
+      "profile": null
+    }));
+    return true;
+  })();
 
   String _url;
 
   Avatar({
     super.id,
     required String url,
-  }) : _url = url;
+  })  : _url = url,
+        super(isRegisteredModel: Avatar.isRegisteredModel);
 
   String get url => _url;
 
