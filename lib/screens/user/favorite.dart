@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:stream_it/repositories/favorite.dart';
 import 'package:stream_it/screens/user/watch_movie.dart';
 
+import '../../models/favorite.dart';
+import '../../models/history.dart';
 import '../../models/movie.dart';
+import '../../repositories/category.dart';
+import '../../repositories/history.dart';
 import '../../repositories/movie.dart';
 import '../../repositories/profile.dart';
 
@@ -26,6 +30,10 @@ class _FavoritesState extends State<Favorites> {
   bool isLoading = true;
   var prf=ProfileRepository();
   var flm=MovieRepository();
+  var hst=HistoryRepository();
+  var ctg=CategoryRepository();
+  var fav=FavoriteRepository();
+
   List<Movie> all_movies = [];
 
   Future<void> recuperation() async{
@@ -72,14 +80,30 @@ class _FavoritesState extends State<Favorites> {
             var movie=all_movies[index];
             return GestureDetector(
               onTap: (){
-                movie.views++;
-                flm.update(movie);
-                //logique incrementation des vues
-                Navigator.push(context, MaterialPageRoute(builder: (context){
-                  return WatchMovie(profile_name:widget.profile_name,profile_id:widget.profile_id,
-                      movie_id:movie.id,movie_title:movie.title);
-                })
-                );
+                var now = DateTime.now();
+                History hst1=History(profileId:widget.profile_id , movieId:movie.id!, datetime: now );
+                hst.search({"movie_id": movie.id, "profile_id": widget.profile_id}).then((result){
+                  if(result.isEmpty) {
+                    movie.views++;
+                    flm.update(movie).then((_) {
+                      hst.create(hst1).then((_) {
+                        setState(() {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(
+                                  "Ajout aux historiques")
+                              )
+                          );
+                        });
+                      });
+                    });
+                  }
+                }).then((_){
+                  Navigator.push(context, MaterialPageRoute(builder: (context){
+                    return WatchMovie(profile_name:widget.profile_name,profile_id:widget.profile_id,
+                        movie_url:movie.url,movie_title:movie.title);
+                  })
+                  );
+                });
               },
               child: Card(
 
@@ -108,11 +132,24 @@ class _FavoritesState extends State<Favorites> {
                             ),
                             IconButton(
                                 onPressed: () {
-                                  setState(() {
-
+                                  //ajout ou retrait dans favoris
+                                  Favorite fav1=Favorite(profileId:widget.profile_id , movieId:movie.id! );
+                                  fav.search({"movie_id": movie.id, "profile_id": widget.profile_id}).then((result){
+                                    if(result.isEmpty){
+                                      print("impossible de ne pass quelque chose ici ");
+                                    }else{
+                                      fav.delete(result[0]).then((_){
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text("Retrait des favoris"))
+                                          );
+                                      });
+                                    }
+                                  }).then((_){
+                                     Navigator.pop(context);
                                   });
                                 },
-                                icon: const Icon(Icons.favorite_border_outlined)),
+                                icon: const Icon(Icons.favorite,color: Colors.pink,)
+                            ),
                           ]
                       )
               ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'package:stream_it/screens/user/watch_movie.dart';
 
@@ -31,6 +32,9 @@ class _MoviesState extends State<Movies> {
     // TODO: implement initState
     super.initState();
     recuperation();
+    setState(() {
+
+    });
   }
 
   bool isLoading = true;
@@ -66,17 +70,6 @@ class _MoviesState extends State<Movies> {
       });
     }
   }
-
-  Future<bool> isFavorite(Movie movie) async {
-    try {
-      final result = await fav.search({"movie_id": movie.id, "profile_id": widget.profile_id});
-      return result.isNotEmpty;
-    } catch (e) {
-      print("Erreur lors de la vérification des favoris : $e");
-      return false;
-    }
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -130,11 +123,11 @@ class _MoviesState extends State<Movies> {
                         var movie = movies[movieIndex];
                         return GestureDetector(
                           onTap: (){
-                            movie.views++;
                             var now = DateTime.now();
                             History hst1=History(profileId:widget.profile_id , movieId:movie.id!, datetime: now );
                             hst.search({"movie_id": movie.id, "profile_id": widget.profile_id}).then((result){
                                 if(result.isEmpty) {
+                                  movie.views++;
                                   flm.update(movie).then((_) {
                                     hst.create(hst1).then((_) {
                                       setState(() {
@@ -147,16 +140,12 @@ class _MoviesState extends State<Movies> {
                                     });
                                   });
                                 }else{
-                                  flm.update(movie).then((_) {
-                                    setState(() {
 
-                                    });
-                                  });
                                 }
                             }).then((_){
                               Navigator.push(context, MaterialPageRoute(builder: (context){
                                 return WatchMovie(profile_name:widget.profile_name,profile_id:widget.profile_id,
-                                    movie_id:movie.id,movie_title:movie.title);
+                                    movie_url:movie.url,movie_title:movie.title);
                               })
                               );
                             });
@@ -186,7 +175,7 @@ class _MoviesState extends State<Movies> {
                                             ),
                                           ),
                                           Text("${movie.views} vues",
-                                            style: const TextStyle(fontSize: 14, color: Colors.grey),
+                                            style: const TextStyle(fontSize: 14, color: Colors.red),
                                           ),
                                           Padding(
                                             padding: const EdgeInsets.all(8.0),

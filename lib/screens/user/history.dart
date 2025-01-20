@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:stream_it/screens/user/watch_movie.dart';
 
+import '../../models/favorite.dart';
 import '../../models/movie.dart';
+import '../../repositories/favorite.dart';
 import '../../repositories/movie.dart';
 import '../../repositories/profile.dart';
 
@@ -26,6 +28,7 @@ class _HistoryViewState extends State<HistoryView> {
   bool isLoading = true;
   var prf=ProfileRepository();
   var flm=MovieRepository();
+  var fav=FavoriteRepository();
 
   List<Movie> all_movies = [];
 
@@ -74,12 +77,9 @@ class _HistoryViewState extends State<HistoryView> {
               var movie=all_movies[index];
               return GestureDetector(
                 onTap: (){
-                  movie.views++;
-                  flm.update(movie);
-                  //logique incrementation des vues
                   Navigator.push(context, MaterialPageRoute(builder: (context){
                     return WatchMovie(profile_name:widget.profile_name,profile_id:widget.profile_id,
-                        movie_id:movie.id,movie_title:movie.title);
+                        movie_url:movie.url,movie_title:movie.title);
                   })
                   );
                 },
@@ -109,11 +109,30 @@ class _HistoryViewState extends State<HistoryView> {
                           ),
                           IconButton(
                               onPressed: () {
-                                setState(() {
-
+                                //ajout ou retrait dans favoris
+                                Favorite fav1=Favorite(profileId:widget.profile_id , movieId:movie.id! );
+                                fav.search({"movie_id": movie.id, "profile_id": widget.profile_id}).then((result){
+                                  if(result.isEmpty){
+                                    fav.create(fav1).then((_) {
+                                      setState(() {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text("Ajout aux favoris"))
+                                        );
+                                      });
+                                    });
+                                  }else{
+                                    fav.delete(result[0]).then((_){
+                                      setState(() {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text("Retrait des favoris"))
+                                        );
+                                      });
+                                    });
+                                  }
                                 });
                               },
-                              icon: const Icon(Icons.favorite_border_outlined)),
+                              icon: const Icon(Icons.favorite_border_outlined)
+                          ),
                         ]
                     )
                 ),

@@ -63,7 +63,6 @@ class _UserPageHomeState extends State<UserPageHome> {
            }
          )
          );
-
        },
      child: Card(
         elevation: 10,
@@ -88,7 +87,6 @@ class _UserPageHomeState extends State<UserPageHome> {
     ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
