@@ -80,7 +80,7 @@ abstract class FirebaseFirestoreRepository<T extends Model>
       await FirebaseFirestore.instance
           .collection(collectionName)
           .doc(item.id)
-          .update(item.toJson());
+          .update(item.toFirebaseFirestoreDocument());
       return item;
     } else {
       String id = item["id"];

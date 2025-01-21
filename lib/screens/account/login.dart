@@ -33,8 +33,8 @@ class _LoginState extends State<Login> {
         child: Form(
           key:_formKey,
             child: Column(
-            children:[
-            TextFormField(
+              children:[
+             TextFormField(
               decoration:const InputDecoration(
                 labelText:"Mail",
                 hintText:"entrez votre adresse mail",
@@ -110,7 +110,7 @@ class _LoginState extends State<Login> {
                             case 'user':
                               Navigator.push(context,
                                   MaterialPageRoute(builder: (context)
-                                  {return UserPageHome();} )
+                                  {return UserPageHome(idUser:userCredential.user!.uid);} )
                               );
                               break;
 

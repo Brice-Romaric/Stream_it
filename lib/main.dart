@@ -1,9 +1,12 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:stream_it/screens/account/login.dart';
 import 'package:stream_it/screens/account/signup.dart';
 
+
 import 'firebase_options.dart';
+import 'models/movie.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,8 +14,7 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
-  runApp(const MyApp());
+   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
