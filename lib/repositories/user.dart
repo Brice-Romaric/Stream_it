@@ -4,5 +4,5 @@ import 'package:stream_it/repositories/firebase_firestore.dart';
 class UserRepository extends FirebaseFirestoreRepository<User> {
   static final UserRepository _instance = UserRepository();
 
-  static get instance => _instance;
+  static UserRepository get instance => _instance;
 }

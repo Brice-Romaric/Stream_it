@@ -82,7 +82,9 @@ class _MonScaffoldState extends State<MonScaffold> {
                   user: snapshot.data!,
                 );
               } else {
-                return UserPageHome();
+                return UserPageHome(
+                  idUser: snapshot.data!.id,
+                );
               }
             } else {
               return Scaffold(
