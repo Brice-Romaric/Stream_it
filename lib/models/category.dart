@@ -4,20 +4,28 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:stream_it/models/model.dart';
 
 class Category extends Model {
-  static get modelName {
-    return "category";
-  }
-
-  static get modelFields {
-    return ["id", "name"];
-  }
+  static final bool isRegisteredModel = (() {
+    Model.registerModel<Category>(ModelInfo(modelFields: [
+      "id",
+      "name"
+    ], callables: [
+      Category.new,
+      Category.fromFirebaseDocument,
+      Category.fromJson,
+      Category.fromRawJson
+    ], relations: {
+      "movie": "movie_categories"
+    }));
+    return true;
+  })();
 
   String _name;
 
   Category({
     super.id,
     required String name,
-  }) : _name = name;
+  })  : _name = name,
+        super(isRegisteredModel: Category.isRegisteredModel);
 
   String get name => _name;
 

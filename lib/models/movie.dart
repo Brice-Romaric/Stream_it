@@ -4,12 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:stream_it/models/model.dart';
 
 class Movie extends Model {
-  static get modelName {
-    return "movie";
-  }
-
-  static get modelFields {
-    return [
+  static final bool isRegisteredModel = (() {
+    Model.registerModel<Movie>(ModelInfo(modelFields: [
       "id",
       "title",
       "description",
@@ -17,8 +13,18 @@ class Movie extends Model {
       "url",
       "cover_url",
       "views",
-    ];
-  }
+    ], callables: [
+      Movie.new,
+      Movie.fromFirebaseDocument,
+      Movie.fromJson,
+      Movie.fromRawJson
+    ], relations: {
+      "category": "movie_categories",
+      "favorite": null,
+      "history": null
+    }));
+    return true;
+  })();
 
   String _title;
   String _description;
@@ -40,7 +46,8 @@ class Movie extends Model {
         _url = url,
         _duration = duration,
         _description = description,
-        _title = title;
+        _title = title,
+        super(isRegisteredModel: Movie.isRegisteredModel);
 
   String get title => _title;
 

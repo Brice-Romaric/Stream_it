@@ -4,18 +4,23 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:stream_it/models/model.dart';
 
 class History extends Model {
-  static get modelName {
-    return "history";
-  }
-
-  static get modelFields {
-    return [
+  static final bool isRegisteredModel = (() {
+    Model.registerModel<History>(ModelInfo(modelFields: [
       "id",
       "movie_id",
       "profile_id",
       "datetime",
-    ];
-  }
+    ], callables: [
+      History.new,
+      History.fromFirebaseDocument,
+      History.fromJson,
+      History.fromRawJson
+    ], relations: {
+      "movie": null,
+      "profile": null,
+    }));
+    return true;
+  })();
 
   String _movieId;
   String _profileId;
@@ -28,7 +33,8 @@ class History extends Model {
     required DateTime datetime,
   })  : _datetime = datetime,
         _profileId = profileId,
-        _movieId = movieId;
+        _movieId = movieId,
+        super(isRegisteredModel: History.isRegisteredModel);
 
   String get movieId => _movieId;
 
