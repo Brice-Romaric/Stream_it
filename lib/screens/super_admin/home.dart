@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:stream_it/models/user.dart';
+import 'package:stream_it/providers/user.dart';
 import 'package:stream_it/screens/super_admin/managements/avatar.dart';
 import 'package:stream_it/screens/super_admin/managements/category.dart';
 import 'package:stream_it/screens/super_admin/managements/movie.dart';
@@ -86,6 +88,14 @@ class SuperAdminPageHome extends StatelessWidget {
       appBar: AppBar(
         title: Text("Tableau de bord"),
         backgroundColor: Colors.purpleAccent,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: () =>
+                Provider.of<UserProvider>(context, listen: false).logout(),
+            tooltip: "Déconnexion",
+          ),
+        ],
       ),
       body: GridView.builder(
           padding: EdgeInsets.all(15),

@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:stream_it/models/model.dart';
-import 'package:stream_it/models/user.dart' as models;
-import 'package:stream_it/repositories/user.dart';
+import 'package:stream_it/providers/user.dart';
 import 'package:stream_it/screens/account/login.dart';
 import 'package:stream_it/screens/account/signup.dart';
 import 'package:stream_it/screens/super_admin/home.dart';
@@ -19,7 +19,14 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => UserProvider()..loadUser()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -49,7 +56,6 @@ class MonScaffold extends StatefulWidget {
 }
 
 class _MonScaffoldState extends State<MonScaffold> {
-  Future<models.User?>? user;
   var _number = 0;
 
   setNumber(int number) {
@@ -59,99 +65,67 @@ class _MonScaffoldState extends State<MonScaffold> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    var userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId != null) {
-      user = UserRepository.instance.getById(userId);
-    } else {
-      user = Future<models.User?>.value();
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: user,
-        builder: (context, snapshot) {
-          List<Widget> children;
-          if (snapshot.hasData) {
-            if (snapshot.data != null) {
-              if (snapshot.data!.role == "super_admin") {
-                return SuperAdminPageHome(
-                  user: snapshot.data!,
-                );
-              } else {
-                return UserPageHome(
-                  idUser: snapshot.data!.id,
-                );
-              }
-            } else {
-              return Scaffold(
-                appBar: AppBar(
-                  title: [
-                    Text("Connexion"),
-                    Text("Inscription"),
-                  ][_number],
+    final userProvider = Provider.of<UserProvider>(context);
+    final currentUser = userProvider.currentUser;
+
+    if (currentUser == null && FirebaseAuth.instance.currentUser != null) {
+      return Scaffold(
+          appBar: AppBar(
+            title: Text("StreamIt"),
+          ),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 60,
+                  height: 60,
+                  child: CircularProgressIndicator(),
                 ),
-                body: [
-                  Login(),
-                  Signup(),
-                ][_number],
-                bottomNavigationBar: BottomNavigationBar(
-                    currentIndex: _number,
-                    selectedItemColor: Colors.red,
-                    unselectedItemColor: Colors.brown,
-                    iconSize: 32,
-                    backgroundColor: Colors.purple[200],
-                    onTap: (index) {
-                      setNumber(index);
-                    },
-                    items: [
-                      BottomNavigationBarItem(
-                          icon: Icon(Icons.accessibility_new_sharp),
-                          label: 'Connexion'),
-                      BottomNavigationBarItem(
-                          icon: Icon(Icons.accessibility_new_sharp),
-                          label: 'Inscription'),
-                    ]),
-              );
-            }
-          } else if (snapshot.hasError) {
-            children = <Widget>[
-              const Icon(
-                Icons.error_outline,
-                color: Colors.red,
-                size: 60,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: Text('Error: ${(snapshot.error as Error).stackTrace}'),
-              ),
-            ];
-          } else {
-            children = const <Widget>[
-              SizedBox(
-                width: 60,
-                height: 60,
-                child: CircularProgressIndicator(),
-              ),
-              Padding(
-                padding: EdgeInsets.only(top: 16),
-                child: Text('Un instant...'),
-              ),
-            ];
-          }
-          return Scaffold(
-              appBar: AppBar(
-                title: Text("StreamIt"),
-              ),
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: children,
+                Padding(
+                  padding: EdgeInsets.only(top: 16),
+                  child: Text('Un instant...'),
                 ),
-              ));
-        });
+              ],
+            ),
+          ));
+    } else if (currentUser != null) {
+      if (currentUser.role == "super_admin") {
+        return SuperAdminPageHome(user: currentUser);
+      } else {
+        return UserPageHome(idUser: currentUser.id);
+      }
+    } else {
+      return Scaffold(
+        appBar: AppBar(
+          title: [
+            Text("Connexion"),
+            Text("Inscription"),
+          ][_number],
+        ),
+        body: [
+          Login(),
+          Signup(),
+        ][_number],
+        bottomNavigationBar: BottomNavigationBar(
+            currentIndex: _number,
+            selectedItemColor: Colors.red,
+            unselectedItemColor: Colors.brown,
+            iconSize: 32,
+            backgroundColor: Colors.purple[200],
+            onTap: (index) {
+              setNumber(index);
+            },
+            items: [
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.accessibility_new_sharp),
+                  label: 'Connexion'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.accessibility_new_sharp),
+                  label: 'Inscription'),
+            ]),
+      );
+    }
   }
 }
