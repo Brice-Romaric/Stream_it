@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stream_it/models/model.dart';
 import 'package:stream_it/repositories/repository.dart';
 
-extension StringExtension on String {
+extension FormStringExtension on String {
   String toCapitalCase() {
     return "${this[0].toUpperCase()}${substring(1).toLowerCase()}";
   }
@@ -44,7 +44,7 @@ abstract class FormScreen<T extends Model> extends StatefulWidget {
         if (item == null) {
           T i = await repository.create(fromJson(fields));
           for (var entry in fields.entries) {
-            if (!modelInfo.modelFields.contains(entry.key)) {
+            if (!modelInfo.fields.contains(entry.key)) {
               var tableName = ModelInfo.collectionNameToModelName(entry.key);
               if (entry.value is List) {
                 var relationName = modelInfo.relations[tableName];
@@ -63,7 +63,7 @@ abstract class FormScreen<T extends Model> extends StatefulWidget {
         } else {
           T i = await repository.update(fromJson({...fields, "id": item!.id}));
           for (var entry in fields.entries) {
-            if (!modelInfo.modelFields.contains(entry.key)) {
+            if (!modelInfo.fields.contains(entry.key)) {
               var tableName = ModelInfo.collectionNameToModelName(entry.key);
               if (entry.value is List) {
                 var relationName = modelInfo.relations[tableName];

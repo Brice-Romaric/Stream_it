@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stream_it/models/model.dart';
 import 'package:stream_it/repositories/repository.dart';
+import 'package:stream_it/screens/super_admin/managements/screens/details.dart';
 import 'package:stream_it/screens/super_admin/managements/screens/form.dart';
 
 abstract class ManagementScreen<T extends Model> extends StatefulWidget {
@@ -10,14 +11,18 @@ abstract class ManagementScreen<T extends Model> extends StatefulWidget {
   late final List<String> cardSubtitleFields;
   late final List<String> onSearchFields;
   late final int maxItems;
+  late final dynamic leading;
+  late final String? image;
 
   ManagementScreen({super.key});
 
   @override
   State<ManagementScreen> createState() => _ManagementScreenState();
 
-  FormScreen buildFormScreen(BuildContext context, Repository<T> repository,
-      String title, dynamic item);
+  FormScreen buildFormScreen(BuildContext context, String title, dynamic item);
+
+  DetailsScreen buildDetailsScreen(
+      BuildContext context, String title, dynamic item);
 }
 
 class _ManagementScreenState extends State<ManagementScreen> {
@@ -101,59 +106,90 @@ class _ManagementScreenState extends State<ManagementScreen> {
                           var title = widget.cardTitleFields
                               .map((field) => item[field])
                               .join(" ");
-                          return Card(
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: Colors.purpleAccent,
-                                child: const Icon(
-                                  Icons.person,
-                                  color: Colors.white,
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          widget.buildDetailsScreen(
+                                              context,
+                                              widget.title.substring(
+                                                  0, widget.title.length - 1),
+                                              item)));
+                            },
+                            child: Card(
+                              child: ListTile(
+                                visualDensity: VisualDensity(vertical: 4),
+                                leading: widget.leading != null
+                                    ? (widget.leading is IconData
+                                        ? Container(
+                                            decoration: BoxDecoration(
+                                                color: widget.image == null
+                                                    ? Colors.purpleAccent
+                                                    : Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(10)),
+                                            height:
+                                                widget.image == null ? 60 : 100,
+                                            width:
+                                                widget.image == null ? 60 : 100,
+                                            child: widget.image == null
+                                                ? Icon(
+                                                    widget.leading,
+                                                    color: Colors.white,
+                                                  )
+                                                : Image.network(
+                                                    item[widget.image!]),
+                                          )
+                                        : widget.leading)
+                                    : null,
+                                title: Text(title),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: widget.cardSubtitleFields
+                                      .map((field) => Text("${item[field]}"))
+                                      .toList(),
                                 ),
-                              ),
-                              title: Text(title),
-                              subtitle: Column(
-                                children: widget.cardSubtitleFields
-                                    .map((field) => Text("${item[field]}"))
-                                    .toList(),
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    onPressed: () {
-                                      Navigator.push<bool>(context,
-                                          MaterialPageRoute(builder: (context) {
-                                        return widget.buildFormScreen(
-                                            context,
-                                            widget.repository,
-                                            widget.title.substring(
-                                                0, widget.title.length - 1),
-                                            item); // <- item
-                                      })).then((result) {
-                                        if (result != null && result) {
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      onPressed: () {
+                                        Navigator.push<bool>(context,
+                                            MaterialPageRoute(
+                                                builder: (context) {
+                                          return widget.buildFormScreen(
+                                              context,
+                                              widget.title.substring(
+                                                  0, widget.title.length - 1),
+                                              item); // <- item
+                                        })).then((result) {
+                                          if (result != null && result) {
+                                            setState(() {
+                                              getItems();
+                                            });
+                                          }
+                                        });
+                                      },
+                                      icon: const Icon(Icons.edit,
+                                          color: Colors.blue),
+                                    ),
+                                    IconButton(
+                                      onPressed: () {
+                                        widget.repository
+                                            .delete(item)
+                                            .then((data) {
                                           setState(() {
                                             getItems();
                                           });
-                                        }
-                                      });
-                                    },
-                                    icon: const Icon(Icons.edit,
-                                        color: Colors.blue),
-                                  ),
-                                  IconButton(
-                                    onPressed: () {
-                                      widget.repository
-                                          .delete(item)
-                                          .then((data) {
-                                        setState(() {
-                                          getItems();
                                         });
-                                      });
-                                    },
-                                    icon: const Icon(Icons.delete,
-                                        color: Colors.red),
-                                  ),
-                                ],
+                                      },
+                                      icon: const Icon(Icons.delete,
+                                          color: Colors.red),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           );
@@ -204,7 +240,6 @@ class _ManagementScreenState extends State<ManagementScreen> {
           Navigator.push<bool>(context, MaterialPageRoute(builder: (context) {
             return widget.buildFormScreen(
                 context,
-                widget.repository,
                 widget.title.substring(0, widget.title.length - 1),
                 null); // <- null
           })).then((result) {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:stream_it/models/model.dart';
 import 'package:stream_it/models/user.dart';
-import 'package:stream_it/repositories/repository.dart';
 import 'package:stream_it/repositories/user.dart';
+import 'package:stream_it/screens/super_admin/managements/screens/details.dart';
 import 'package:stream_it/screens/super_admin/managements/screens/form.dart';
 import 'package:stream_it/screens/super_admin/managements/screens/management.dart';
 import 'package:stream_it/widgets/field.dart';
@@ -51,19 +51,81 @@ class UserFormScreen extends FormScreen<User> {
   }
 }
 
+class UserDetailsScreen extends DetailsScreen<User> {
+  const UserDetailsScreen(
+      {super.key, required super.title, required super.item});
+
+  @override
+  Widget buildFieldsContainer(BuildContext context) {
+    return Column(children: [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            "Nom : ",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          Text(item.lastName)
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            "Prénom : ",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          Text(item.firstName)
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            "Email : ",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          Text(item.email)
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            "Rôle : ",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          Text(item.role)
+        ],
+      ),
+    ]);
+  }
+}
+
 class UserManagementScreen extends ManagementScreen<User> {
   UserManagementScreen({super.key}) {
     title = "Utilisateurs";
     cardTitleFields = ["first_name", "last_name"];
     cardSubtitleFields = ["email"];
-    onSearchFields = Model.modelInfoOf<User>()?.modelFields ?? [];
+    onSearchFields = Model.modelInfoOf<User>()?.fields ?? [];
     repository = UserRepository.instance;
     maxItems = 50;
+    leading = Icons.person;
+    image = null;
   }
 
   @override
-  buildFormScreen(BuildContext context, Repository<User> repository,
-      String title, dynamic item) {
+  buildFormScreen(BuildContext context, String title, dynamic item) {
     return UserFormScreen(title: title, repository: repository, item: item);
+  }
+
+  @override
+  DetailsScreen<Model> buildDetailsScreen(
+      BuildContext context, String title, item) {
+    return UserDetailsScreen(title: title, item: item);
   }
 }

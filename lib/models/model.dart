@@ -51,7 +51,7 @@ class Callable {
 class ModelInfo<T extends Model> {
   late String _name;
   late String _collectionName;
-  late List<String> _modelFields;
+  late List<String> _fields;
   late Map<String, Callable> _callables;
   late Map<String, String?> _relations;
 
@@ -65,7 +65,7 @@ class ModelInfo<T extends Model> {
     this._collectionName = collectionName ?? modelToCollectionName<T>();
     modelFields ??= ["id"];
     if (!modelFields.contains("id")) modelFields.add("id");
-    this._modelFields = List<String>.unmodifiable(modelFields);
+    this._fields = List<String>.unmodifiable(modelFields);
     Map<String, dynamic> c = {};
     if (callables != null) {
       for (var callable in callables) {
@@ -73,7 +73,7 @@ class ModelInfo<T extends Model> {
       }
     }
     this._callables = Map<String, Callable>.unmodifiable(c);
-    this._relations = Map<String, String>.unmodifiable(relations ?? {});
+    this._relations = Map<String, String?>.unmodifiable(relations ?? {});
   }
 
   Type get type => T;
@@ -82,11 +82,15 @@ class ModelInfo<T extends Model> {
 
   String get collectionName => _collectionName;
 
-  List<String> get modelFields => _modelFields;
+  List<String> get fields => _fields;
 
   Map<String, dynamic> get callables => _callables;
 
   Map<String, String?> get relations => _relations;
+
+  List<String> get allFields {
+    return [...fields, ..._relations.keys];
+  }
 
   dynamic getCallable(String name) {
     if (name == "new" || name == "$T.new" || name.isEmpty) {
