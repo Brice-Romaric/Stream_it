@@ -9,36 +9,35 @@ import '../../repositories/avatar.dart';
 import '../../repositories/profile.dart';
 import 'addProfils.dart';
 
-
 class UserPageHome extends StatefulWidget {
   final idUser;
+  final Function(BuildContext)? onLogout;
 
-  const UserPageHome({super.key,required this.idUser});
+  const UserPageHome({super.key, required this.idUser, this.onLogout});
 
   @override
   State<UserPageHome> createState() => _UserPageHomeState();
 }
 
 class _UserPageHomeState extends State<UserPageHome> {
-
   @override
   void initState() {
     super.initState();
     assigne();
   }
 
-  var pr=ProfileRepository();
-    List<Profile> profilesTmp = [];
+  var pr = ProfileRepository();
+  List<Profile> profilesTmp = [];
   List<Profile> profiles = [];
 
-  var a=AvatarRepository();
-  Map<String, Avatar> AvatarCache = {};  // stoqué touts les avatars
-    List<Avatar>AvatarCacheTmp=[];
+  var a = AvatarRepository();
+  Map<String, Avatar> AvatarCache = {}; // stoqué touts les avatars
+  List<Avatar> AvatarCacheTmp = [];
 
-  Future<void> assigne() async{
-    try{
+  Future<void> assigne() async {
+    try {
       profilesTmp = await pr.getAll();
-      AvatarCacheTmp=await a.getAll();
+      AvatarCacheTmp = await a.getAll();
 
       // Filtrer les profils de l'utilisateur actuel
       profiles = profilesTmp.where((p) => p.userId == widget.idUser).toList();
@@ -47,99 +46,104 @@ class _UserPageHomeState extends State<UserPageHome> {
       for (var avatar in AvatarCacheTmp) {
         AvatarCache[avatar.id!] = avatar;
       }
-        setState(() {});
-
+      setState(() {});
     } catch (e) {
       print("Erreur: $e");
     }
   }
 
   //affichage dans gridview
-  Widget  buildGridViewProfile(Profile profile,Avatar avatar){
+  Widget buildGridViewProfile(Profile profile, Avatar avatar) {
     return GestureDetector(
-       onTap: (){
-         Navigator.push(context, MaterialPageRoute(builder: (context){
-            return Movies(profile_name:profile.name,profile_id:profile.id,avatar_url:avatar.url,);
-           }
-         )
-         );
-       },
-     child: Card(
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (context) {
+          return Movies(
+            profile_name: profile.name,
+            profile_id: profile.id,
+            avatar_url: avatar.url,
+          );
+        }));
+      },
+      child: Card(
         elevation: 10,
-       color: Colors.purpleAccent,
-      child: Padding(
+        color: Colors.purpleAccent,
+        child: Padding(
           padding: EdgeInsets.all(10),
           child: Column(
             children: [
               CircleAvatar(
-              backgroundImage: NetworkImage(avatar.url),
+                backgroundImage: NetworkImage(avatar.url),
                 radius: 30,
               ),
-            ListTile(
-            //  title:Text(profile.name) ,
-            ),
-              Text(profile.name,style: TextStyle(fontSize: 20,
-                  fontWeight: FontWeight.bold,),
+              ListTile(
+                  //  title:Text(profile.name) ,
+                  ),
+              Text(
+                profile.name,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               )
-        ],
+            ],
+          ),
+        ),
       ),
-      ),
-    ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-       appBar: AppBar(
-         title: Text("VOS PROFILS",style: TextStyle(fontSize:20,fontWeight: FontWeight.bold ),) ,
-         //backgroundColor: Colors.purple,
+      appBar: AppBar(
+        title: Text(
+          "VOS PROFILS",
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        //backgroundColor: Colors.purple,
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: () =>
+                (widget.onLogout != null ? widget.onLogout!(context) : null) ??
                 Provider.of<UserProvider>(context, listen: false).logout(),
             tooltip: "Déconnexion",
           ),
         ],
       ),
-      body:  profiles.isEmpty
-          ? Center(child: CircularProgressIndicator())  // Afficher un indicateur de chargement si la liste est vide
-          :GridView.builder(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:2,
-            mainAxisSpacing: 5,crossAxisSpacing: 5 ),
-
+      body: profiles.isEmpty
+          ? Center(
+              child:
+                  CircularProgressIndicator()) // Afficher un indicateur de chargement si la liste est vide
+          : GridView.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2, mainAxisSpacing: 5, crossAxisSpacing: 5),
               itemCount: profiles!.length,
-              itemBuilder: (context,index){
-                  Profile profile = profiles[index];
-                  Avatar? avatar = AvatarCache[profile.avatarId!];
-                return buildGridViewProfile(profile,avatar!);
-            },
-          ),
+              itemBuilder: (context, index) {
+                Profile profile = profiles[index];
+                Avatar? avatar = AvatarCache[profile.avatarId!];
+                return buildGridViewProfile(profile, avatar!);
+              },
+            ),
       floatingActionButton: FloatingActionButton(
-          child: Icon(Icons.add),
-          onPressed: () async {
-            if(profiles.length<5){
-              var result =await Navigator.push(context,
-                  MaterialPageRoute(builder: (context){
-                    return AddProfil(idUser:widget.idUser);
-                  }
-                  )
-              );
-              // Rafraîchir les données si un profil a été ajouté
-              if (result == true) {
-                await assigne();
-              }
+        child: Icon(Icons.add),
+        onPressed: () async {
+          if (profiles.length < 5) {
+            var result = await Navigator.push(context,
+                MaterialPageRoute(builder: (context) {
+              return AddProfil(idUser: widget.idUser);
+            }));
+            // Rafraîchir les données si un profil a été ajouté
+            if (result == true) {
+              await assigne();
             }
-            else{
-              ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Vous avez atteint le nombre maximum de profils par utilisateur"))
-              );
-            }
-
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(
+                    "Vous avez atteint le nombre maximum de profils par utilisateur")));
+          }
         },
-        ),
-      );
+      ),
+    );
   }
-
 }

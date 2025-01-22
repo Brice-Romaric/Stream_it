@@ -57,6 +57,7 @@ class ManagementItem extends StatelessWidget {
 
 class SuperAdminPageHome extends StatelessWidget {
   final User user;
+  final Function(BuildContext)? onLogout;
 
   static final List<ManagementItem> managementItems = [
     ManagementItem(
@@ -80,7 +81,7 @@ class SuperAdminPageHome extends StatelessWidget {
     ),
   ];
 
-  const SuperAdminPageHome({super.key, required this.user});
+  const SuperAdminPageHome({super.key, required this.user, this.onLogout});
 
   @override
   Widget build(BuildContext context) {
@@ -92,6 +93,7 @@ class SuperAdminPageHome extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: () =>
+                (onLogout != null ? onLogout!(context) : null) ??
                 Provider.of<UserProvider>(context, listen: false).logout(),
             tooltip: "Déconnexion",
           ),
